@@ -1,22 +1,34 @@
 #include "game.hpp"
 
-#include "globals.hpp"
-
 #include "raylib.h"
 
-Game::Game() : player(*this), gravity(9.81) {
+#include "globals.hpp"
+#include "player.hpp"
+#include <memory>
+
+Game::Game() : entities{}, gravity(9.81) {
+	entities.push_back(std::make_unique<Player>(*this));
+	camera.target = Vector2{ 0, 0 };
+	camera.offset = Vector2{
+		global::WINDOW_WIDTH / 2.0f,
+		global::WINDOW_HEIGHT / 2.0f,
+	};
+	camera.rotation = 0;
+	camera.zoom = global::PPU;
 }
 
 static float ballX = global::WINDOW_WIDTH / 2.0f;
 static float ballY = global::WINDOW_HEIGHT / 2.0f;
 static const float ballR = 12;
-static float ballDx = 50;
-static float ballDy = -20;
+static float ballDx = 80;
+static float ballDy = -32;
 
 void Game::update() {
 	const float dt = GetFrameTime();
 
-	player.update(dt);
+	for (auto &entity : entities) {
+		entity->update(dt);
+	}
 
 	ballX += ballDx * dt;
 	ballY += ballDy * dt;
@@ -43,7 +55,16 @@ void Game::draw() {
 
 	DrawCircle(ballX, ballY, ballR, RED);
 
-	player.draw();
+	BeginMode2D(camera);
+
+	for (const auto &entity : entities) {
+		entity->draw();
+	}
+
+	DrawCircle(0, 0, 0.1, GREEN);
+	DrawCircle(0, 1, 0.1, GREEN);
+
+	EndMode2D();
 
 	DrawFPS(10, 10);
 

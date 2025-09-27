@@ -1,9 +1,15 @@
 #pragma once
 
-#include "player.hpp"
+#include <memory>
+#include <vector>
+
+#include "raylib.h"
+
+#include "entity.hpp"
 
 class Game {
-	Player player;
+	std::vector<std::unique_ptr<Entity>> entities;
+	Camera2D camera;
 public:
 	float gravity;
 

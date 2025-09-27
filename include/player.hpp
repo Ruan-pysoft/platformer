@@ -2,9 +2,11 @@
 
 #include "raylib.h"
 
+#include "entity.hpp"
+
 class Game;
 
-class Player {
+class Player : public Entity {
 	Game &game;
 	Vector2 pos;
 	Vector2 vel;
@@ -16,5 +18,5 @@ public:
 	Player(Game &game);
 
 	void update(float dt);
-	void draw();
+	void draw() const;
 };
