@@ -27,6 +27,10 @@ OBJS=""
 
 $CC $CFLAGS -c $SRCDIR/main.cpp -o $BUILDDIR/main.o
 OBJS="$OBJS $BUILDDIR/main.o"
+$CC $CFLAGS -c $SRCDIR/game.cpp -o $BUILDDIR/game.o
+OBJS="$OBJS $BUILDDIR/game.o"
+$CC $CFLAGS -c $SRCDIR/player.cpp -o $BUILDDIR/player.o
+OBJS="$OBJS $BUILDDIR/player.o"
 
 # link the kernel
 

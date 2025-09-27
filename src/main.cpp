@@ -1,29 +1,38 @@
-#include <iostream>
-
-namespace ray {
 #include "raylib.h"
-}
+
+#include "game.hpp"
+#include "globals.hpp"
 
 int main() {
-	ray::InitWindow(800, 600, "Hello Window");
+	Game game;
 
-	ray::InitAudioDevice();
+	InitWindow(
+		global::WINDOW_WIDTH, global::WINDOW_HEIGHT,
+		"Hello Window"
+	);
 
-	ray::SetTargetFPS(60);
+	InitAudioDevice();
 
-	while (!ray::WindowShouldClose()) {
-		ray::BeginDrawing();
+	SetTargetFPS(global::FPS);
 
-		ray::ClearBackground(ray::RAYWHITE);
-
-		ray::DrawFPS(10, 10);
-
-		ray::EndDrawing();
+	while (!WindowShouldClose()) {
+		game.update();
+		game.draw();
 	}
 
-	ray::CloseAudioDevice();
+	CloseAudioDevice();
 
-	ray::CloseWindow();
+	CloseWindow();
 
 	return 0;
+}
+
+namespace global {
+
+const int FPS = 60;
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
+
+const int PPU = 16;
+
 }
