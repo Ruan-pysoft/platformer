@@ -6,7 +6,7 @@
 #include "player.hpp"
 #include <memory>
 
-Game::Game() : entities{}, gravity(9.81) {
+Game::Game() : entities{}, gravity(20) {
 	entities.push_back(std::make_unique<Player>(*this));
 	camera.target = Vector2{ 0, 0 };
 	camera.offset = Vector2{

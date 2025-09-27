@@ -1,10 +1,23 @@
 #include "raylib.h"
 
+#include "actions.hpp"
+#include "input_manager.hpp"
 #include "game.hpp"
 #include "globals.hpp"
 
 int main() {
 	Game game;
+	const InputManager &inp_mgr = InputManager::get();
+
+	for (auto &map : Action::INIT_KEYMAP_ONCE) {
+		map.action.register_key(map.key, map.on_press);
+	}
+	for (auto &map : Action::INIT_KEYMAP_STARTSTOP) {
+		map.action.register_key(map.key);
+	}
+	for (auto &map : Action::INIT_KEYMAP_SUSTAIN) {
+		map.action.register_key(map.key);
+	}
 
 	InitWindow(
 		global::WINDOW_WIDTH, global::WINDOW_HEIGHT,
@@ -16,6 +29,7 @@ int main() {
 	SetTargetFPS(global::FPS);
 
 	while (!WindowShouldClose()) {
+		inp_mgr.handleInputs();
 		game.update();
 		game.draw();
 	}

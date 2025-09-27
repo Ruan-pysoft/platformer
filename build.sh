@@ -10,7 +10,7 @@ NAME="game"
 
 CC="g++"
 CFLAGS="-O2 -g"
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic"
+CFLAGS="$CFLAGS -Wall -Wextra"
 CFLAGS="$CFLAGS -I./include -I./raylib/src"
 
 LD="g++"
@@ -31,6 +31,10 @@ $CC $CFLAGS -c $SRCDIR/game.cpp -o $BUILDDIR/game.o
 OBJS="$OBJS $BUILDDIR/game.o"
 $CC $CFLAGS -c $SRCDIR/player.cpp -o $BUILDDIR/player.o
 OBJS="$OBJS $BUILDDIR/player.o"
+$CC $CFLAGS -c $SRCDIR/input_manager.cpp -o $BUILDDIR/input_manager.o
+OBJS="$OBJS $BUILDDIR/input_manager.o"
+$CC $CFLAGS -c $SRCDIR/actions.cpp -o $BUILDDIR/actions.o
+OBJS="$OBJS $BUILDDIR/actions.o"
 
 # link the kernel
 
