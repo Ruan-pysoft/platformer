@@ -43,13 +43,11 @@ int main() {
 
 namespace global {
 
-const float SCALE = 1.25f;
+const float SCALE = 1.0f;
 const int FPS = 60;
-//const int WINDOW_WIDTH = 800 * SCALE;
-//const int WINDOW_HEIGHT = 600 * SCALE;
-const int WINDOW_WIDTH = 600 * SCALE;
-const int WINDOW_HEIGHT = 800 * SCALE;
+const int WINDOW_WIDTH = 800 * SCALE;
+const int WINDOW_HEIGHT = 600 * SCALE;
 
-const int PPU = 24 * SCALE;
+const int PPU = 20 * SCALE;
 
 }

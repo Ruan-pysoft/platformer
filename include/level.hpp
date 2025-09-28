@@ -21,6 +21,7 @@ class Level {
 	Vector2 get_offset() const;
 public:
 	Level(const Tile *tilemap, int w, int h, Vector2 player_spawn);
+	Level(Image image, Vector2 player_spawn);
 	Vector2 get_player_spawn() const;
 
 	Rectangle get_collider(float x, float y) const;
@@ -34,6 +35,18 @@ static constexpr Tile floor = Tile(BLACK);
 static constexpr Tile air = Tile();
 static constexpr Tile wall = Tile(BROWN);
 static constexpr Tile ghost = Tile(Color { 195, 195, 255, 127 }, false);
+static constexpr Tile flag = Tile(Color { 0, 255, 0, 255 }, false);
+
+static constexpr struct {
+	Color color;
+	Tile tile;
+} colormap[] = {
+	{ { 0, 0, 0, 255 },       floor },
+	{ { 0, 0, 0, 0 },         air },
+	{ { 127, 127, 127, 255 }, wall },
+	{ { 195, 195, 255, 255 }, ghost },
+	{ { 0, 255, 0, 255 },     flag },
+};
 
 const int lvl1_width = 20;
 const int lvl1_height = 5;

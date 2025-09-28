@@ -166,7 +166,7 @@ void Player::resolve_collisions_y() {
 				std::cerr << "Bottom overlap: " << bottom_overlap << std::endl;*/
 				if (top_overlap < bottom_overlap) {
 					/*std::cerr << "Resolving collision on the top downwards..." << std::endl;*/
-					pos.y = collider.y + collider.y + size.y;
+					pos.y = collider.y + collider.height + size.y;
 					if (vel.y < 0) vel.y = 0;
 				} else {
 					/*std::cerr << "Resolving collision on the bottom upwards..." << std::endl;*/

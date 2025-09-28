@@ -1,18 +1,27 @@
 #include "game.hpp"
 
+#include <algorithm>
+#include <memory>
+
 #include "raylib.h"
 
 #include "globals.hpp"
 #include "player.hpp"
-#include <memory>
+
+static constexpr float camera_play = 4;
+static constexpr float camera_follow = 0.5f;
 
 Game::Game() : entities{}, gravity(20) {
 	using namespace Levels;
-	level = std::make_unique<Level>(Level(lvl1_tileset, lvl1_width, lvl1_height, lvl1_spawn));
+
+	//level = std::make_unique<Level>(Level(lvl1_tileset, lvl1_width, lvl1_height, lvl1_spawn));
+	const auto lvl = LoadImage("level.png");
+	level = std::make_unique<Level>(Level(lvl, lvl1_spawn));
+	UnloadImage(lvl);
 
 	entities.push_back(std::make_unique<Player>(*this, level->get_player_spawn()));
 
-	camera.target = Vector2{ 0, -global::WINDOW_HEIGHT / float(global::PPU) / 2.0f };
+	camera.target = level->get_player_spawn();
 	camera.offset = Vector2{
 		global::WINDOW_WIDTH / 2.0f,
 		global::WINDOW_HEIGHT / 2.0f,
@@ -54,6 +63,20 @@ void Game::update() {
 	} else if (ballY + ballR >= global::WINDOW_HEIGHT) {
 		ballY = global::WINDOW_HEIGHT - ballR - 1;
 		ballDy = -ballDy;
+	}
+
+	const auto player_pos = ((Player*)&*entities[0])->get_pos();
+	const Vector2 d = {
+		player_pos.x - camera.target.x,
+		player_pos.y - camera.target.y,
+	};
+	if (std::abs(d.x) > camera_play) {
+		const float v = d.x / camera_follow;
+		camera.target.x += v * dt;
+	}
+	if (std::abs(d.y) > camera_play) {
+		const float v = d.y / camera_follow;
+		camera.target.y += v * dt;
 	}
 }
 void Game::draw() {
