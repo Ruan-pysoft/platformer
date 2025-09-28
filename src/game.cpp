@@ -7,14 +7,22 @@
 #include <memory>
 
 Game::Game() : entities{}, gravity(20) {
-	entities.push_back(std::make_unique<Player>(*this));
-	camera.target = Vector2{ 0, 0 };
+	using namespace Levels;
+	level = std::make_unique<Level>(Level(lvl1_tileset, lvl1_width, lvl1_height, lvl1_spawn));
+
+	entities.push_back(std::make_unique<Player>(*this, level->get_player_spawn()));
+
+	camera.target = Vector2{ 0, -global::WINDOW_HEIGHT / float(global::PPU) / 2.0f };
 	camera.offset = Vector2{
 		global::WINDOW_WIDTH / 2.0f,
 		global::WINDOW_HEIGHT / 2.0f,
 	};
 	camera.rotation = 0;
-	camera.zoom = global::PPU;
+	camera.zoom = global::PPU - 1;
+}
+
+const Level &Game::get_level() const {
+	return *level;
 }
 
 static float ballX = global::WINDOW_WIDTH / 2.0f;
@@ -60,6 +68,8 @@ void Game::draw() {
 	for (const auto &entity : entities) {
 		entity->draw();
 	}
+
+	level->draw();
 
 	DrawCircle(0, 0, 0.1, GREEN);
 	DrawCircle(0, 1, 0.1, GREEN);

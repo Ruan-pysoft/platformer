@@ -35,6 +35,8 @@ $CC $CFLAGS -c $SRCDIR/input_manager.cpp -o $BUILDDIR/input_manager.o
 OBJS="$OBJS $BUILDDIR/input_manager.o"
 $CC $CFLAGS -c $SRCDIR/actions.cpp -o $BUILDDIR/actions.o
 OBJS="$OBJS $BUILDDIR/actions.o"
+$CC $CFLAGS -c $SRCDIR/level.cpp -o $BUILDDIR/level.o
+OBJS="$OBJS $BUILDDIR/level.o"
 
 # link the kernel
 

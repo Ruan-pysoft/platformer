@@ -40,7 +40,8 @@ public:
 
 namespace Action {
 
-extern ActionOnce Jump;
+extern ActionSustain Jump;
+extern ActionOnce DoubleJump;
 extern ActionSustain Left;
 extern ActionSustain Right;
 
@@ -49,9 +50,9 @@ static const struct {
 	ActionOnce &action;
 	bool on_press;
 } INIT_KEYMAP_ONCE[] = {
-	{ KEY_SPACE, Jump, true },
-	{ KEY_W, Jump, true },
-	{ KEY_UP, Jump, true },
+	{ KEY_SPACE, DoubleJump, true },
+	{ KEY_W, DoubleJump, true },
+	{ KEY_UP, DoubleJump, true },
 };
 
 static const struct {
@@ -68,6 +69,9 @@ static const struct {
 	{ KEY_LEFT, Left },
 	{ KEY_D, Right },
 	{ KEY_RIGHT, Right },
+	{ KEY_SPACE, Jump },
+	{ KEY_W, Jump },
+	{ KEY_UP, Jump },
 };
 
 }

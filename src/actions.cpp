@@ -62,7 +62,8 @@ void ActionSustain::trigger(float dt) const {
 
 namespace Action {
 
-ActionOnce Jump{};
+ActionSustain Jump{};
+ActionOnce DoubleJump{};
 ActionSustain Left{};
 ActionSustain Right{};
 
