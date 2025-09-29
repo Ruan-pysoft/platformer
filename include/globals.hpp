@@ -17,11 +17,5 @@ constexpr inline float units(float pixels) {
 constexpr inline float pixels(float units) {
 	return units * PPU;
 }
-constexpr inline Vector2 worldspace(Vector2 display) {
-	return Vector2 { units(display.x), units(WINDOW_HEIGHT - display.y) };
-}
-constexpr inline Vector2 displayspace(Vector2 world) {
-	return Vector2 { pixels(world.x), WINDOW_HEIGHT - pixels(world.y) };
-}
 
 }

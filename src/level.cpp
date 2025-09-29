@@ -131,6 +131,8 @@ void Level::draw() const {
 
 	BeginMode2D(camera);
 
+	player.draw();
+
 	const auto offset = get_offset();
 	for (int y = 0; y < h; ++y) {
 		for (int x = 0; x < w; ++x) {
@@ -140,8 +142,6 @@ void Level::draw() const {
 			);
 		}
 	}
-
-	player.draw();
 
 	EndMode2D();
 }
