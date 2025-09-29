@@ -37,6 +37,8 @@ $CC $CFLAGS -c $SRCDIR/actions.cpp -o $BUILDDIR/actions.o
 OBJS="$OBJS $BUILDDIR/actions.o"
 $CC $CFLAGS -c $SRCDIR/level.cpp -o $BUILDDIR/level.o
 OBJS="$OBJS $BUILDDIR/level.o"
+$CC $CFLAGS -c $SRCDIR/main_menu.cpp -o $BUILDDIR/main_menu.o
+OBJS="$OBJS $BUILDDIR/main_menu.o"
 
 # link the kernel
 

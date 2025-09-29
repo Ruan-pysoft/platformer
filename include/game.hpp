@@ -12,7 +12,9 @@ public:
 
 	Scene &get_scene() const;
 	void set_scene(std::unique_ptr<Scene> new_scene);
+	void load_level(int lvl);
 	void next_level();
+	void load_main_menu();
 
 	void update();
 	void draw() const;

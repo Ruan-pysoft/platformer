@@ -8,6 +8,7 @@
 
 #include "globals.hpp"
 #include "level.hpp"
+#include "main_menu.hpp"
 #include "player.hpp"
 #include "scene.hpp"
 
@@ -20,9 +21,7 @@ static const struct {
 };
 
 Game::Game() {
-	level_idx = -1;
-
-	next_level();
+	load_main_menu();
 }
 
 Scene &Game::get_scene() const {
@@ -31,19 +30,31 @@ Scene &Game::get_scene() const {
 void Game::set_scene(std::unique_ptr<Scene> new_scene) {
 	scene.swap(new_scene);
 }
+void Game::load_level(int lvl) {
+	using namespace Levels;
+	if (lvl < 0 || level_idx >= int(sizeof(levels)/sizeof(*levels))) load_main_menu();
+
+	const auto level_img = LoadImage(levels[lvl].file);
+	set_scene(std::make_unique<Level>(Level(level_img, levels[lvl].spawn)));
+	UnloadImage(level_img);
+
+	level_idx = lvl;
+}
 void Game::next_level() {
 	using namespace Levels;
 
 	++level_idx;
-	if (level_idx < 0) exit(1);
-	if (level_idx >= sizeof(levels)/sizeof(*levels)) {
-		std::cout << "You've finished the game!" << std::endl;
-		exit(0);
+	if (level_idx < 0 || level_idx >= int(sizeof(levels)/sizeof(*levels))) {
+		load_main_menu();
+		return;
 	}
 
-	const auto level_img = LoadImage(levels[level_idx].file);
-	set_scene(std::make_unique<Level>(Level(level_img, levels[level_idx].spawn)));
-	UnloadImage(level_img);
+	load_level(level_idx);
+}
+void Game::load_main_menu() {
+	level_idx = -1;
+
+	set_scene(std::make_unique<MainMenu>());
 }
 
 static float ballX = global::WINDOW_WIDTH / 2.0f;
@@ -93,7 +104,7 @@ void Game::update_scene() {
 			next_level();
 		} break;
 		case SceneAction::MainMenu: {
-			exit(1);
+			load_main_menu();
 		} break;
 	}
 }
