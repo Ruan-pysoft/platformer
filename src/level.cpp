@@ -1,6 +1,7 @@
 #include "level.hpp"
 
 #include <iostream>
+#include <string>
 
 #include "globals.hpp"
 #include "levels_list.hpp"
@@ -149,4 +150,12 @@ void Level::draw() const {
 	}
 
 	EndMode2D();
+
+	std::string level_display = "Level: ";
+	level_display += std::to_string(level_nr + 1);
+	level_display += " / ";
+	level_display += std::to_string(Levels::levels.size());
+
+	const int level_display_height = 20;
+	DrawText(level_display.c_str(), 10, 10, level_display_height, BLACK);
 }

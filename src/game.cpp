@@ -28,32 +28,8 @@ void Game::set_scene(std::unique_ptr<Scene> new_scene) {
 	scene.swap(new_scene);
 }
 
-static float ballX = global::WINDOW_WIDTH / 2.0f;
-static float ballY = global::WINDOW_HEIGHT / 2.0f;
-static const float ballR = 12;
-static float ballDx = 80;
-static float ballDy = -32;
-
 void Game::update() {
 	const float dt = GetFrameTime();
-
-	ballX += ballDx * dt;
-	ballY += ballDy * dt;
-
-	if (ballX - ballR < 0) {
-		ballX = ballR;
-		ballDx = -ballDx;
-	} else if (ballX + ballR >= global::WINDOW_WIDTH) {
-		ballX = global::WINDOW_WIDTH - ballR - 1;
-		ballDx = -ballDx;
-	}
-	if (ballY - ballR < 0) {
-		ballY = ballR;
-		ballDy = -ballDy;
-	} else if (ballY + ballR >= global::WINDOW_HEIGHT) {
-		ballY = global::WINDOW_HEIGHT - ballR - 1;
-		ballDy = -ballDy;
-	}
 
 	scene->update(dt);
 }
@@ -62,9 +38,14 @@ void Game::draw() const {
 
 	scene->draw();
 
-	DrawCircle(ballX, ballY, ballR, RED);
+	const int fps_height = 20;
+	const int fps_maxwidth = MeasureText("1000 FPS", fps_height);
+	const int fps_margin = 10;
 
-	DrawFPS(10, 10);
+	DrawFPS(
+		global::WINDOW_WIDTH - fps_maxwidth - fps_margin,
+		global::WINDOW_HEIGHT - fps_height - fps_margin
+	);
 
 	EndDrawing();
 }
