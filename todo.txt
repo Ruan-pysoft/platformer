@@ -1,3 +1,9 @@
+ - separate collision detection from handling
+ - un-singleton `Player`
+   – see how this interacts with the input manager / actions?
+ - move file-level `static` state variables into class variables
+ - move some variables from `globals` to some config class – eg. allow dynamic window resizing
+ - change from `SceneAction` enum to `SceneTransition` struct
  - level counter
  - level selector
  - level unlocks
@@ -7,3 +13,16 @@
  - death count
  - checkpoints
  - respawn count?
+ - menus: settings menu, level select menu
+ - stars for levels (based on time + deaths; maybe a special achievement for completing deathless & with a short time?)
+ - pb tracker per level
+ - ? scene transitions (fade...?)
+ - move over to nob.h for build system
+ - collectables, power-ups, moving hazards & platforms
+ - pause menu
+ - respawn & level reset keys (perhaps level reset through menu?)
+ - audio & art
+ - ! tutorial level
+ - ! gameplay instructions (how-to menu)
+ - start window fullscreen
+ - add config file & parsing
