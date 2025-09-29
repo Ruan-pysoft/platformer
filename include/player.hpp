@@ -2,25 +2,24 @@
 
 #include "raylib.h"
 
-#include "entity.hpp"
-
-class Game;
-
-class Player : public Entity {
-	Game &game;
+class Level;
+class Player {
 	Vector2 pos;
 	Vector2 vel;
 	static constexpr Vector2 size = Vector2 { 1.0f, 2.0f };
 
-	bool on_ground();
+	Player();
 
-	void resolve_collisions_x();
-	void resolve_collisions_y();
+	bool on_ground(Level &level);
+
+	void resolve_collisions_x(Level &level);
+	void resolve_collisions_y(Level &level);
 public:
-	Player(Game &game, Vector2 spawn);
+	static Player &get_player();
 
 	Vector2 get_pos() const;
+	void reset(Vector2 pos);
 
-	void update(float dt);
+	void update(Level &level, float dt);
 	void draw() const;
 };

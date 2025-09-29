@@ -1,37 +1,43 @@
 #include "game.hpp"
 
-#include <algorithm>
+#include <cstdlib>
 #include <memory>
 
 #include "raylib.h"
 
 #include "globals.hpp"
+#include "level.hpp"
 #include "player.hpp"
+#include "scene.hpp"
 
-static constexpr float camera_play = 4;
-static constexpr float camera_follow = 0.5f;
+static const struct {
+	const char *file;
+	Vector2 spawn;
+} levels[] = {
+	{ "levels/level1.png", Levels::lvl1_spawn },
+};
 
-Game::Game() : entities{}, gravity(20) {
-	using namespace Levels;
+Game::Game() {
+	level_idx = -1;
 
-	//level = std::make_unique<Level>(Level(lvl1_tileset, lvl1_width, lvl1_height, lvl1_spawn));
-	const auto lvl = LoadImage("level.png");
-	level = std::make_unique<Level>(Level(lvl, lvl1_spawn));
-	UnloadImage(lvl);
-
-	entities.push_back(std::make_unique<Player>(*this, level->get_player_spawn()));
-
-	camera.target = level->get_player_spawn();
-	camera.offset = Vector2{
-		global::WINDOW_WIDTH / 2.0f,
-		global::WINDOW_HEIGHT / 2.0f,
-	};
-	camera.rotation = 0;
-	camera.zoom = global::PPU - 1;
+	next_level();
 }
 
-const Level &Game::get_level() const {
-	return *level;
+Scene &Game::get_scene() const {
+	return *scene;
+}
+void Game::set_scene(std::unique_ptr<Scene> new_scene) {
+	scene.swap(new_scene);
+}
+void Game::next_level() {
+	using namespace Levels;
+
+	++level_idx;
+	if (level_idx < 0 || level_idx >= sizeof(levels)/sizeof(*levels)) exit(1);
+
+	const auto level_img = LoadImage(levels[level_idx].file);
+	set_scene(std::make_unique<Level>(Level(level_img, levels[level_idx].spawn)));
+	UnloadImage(level_img);
 }
 
 static float ballX = global::WINDOW_WIDTH / 2.0f;
@@ -42,10 +48,6 @@ static float ballDy = -32;
 
 void Game::update() {
 	const float dt = GetFrameTime();
-
-	for (auto &entity : entities) {
-		entity->update(dt);
-	}
 
 	ballX += ballDx * dt;
 	ballY += ballDy * dt;
@@ -65,41 +67,27 @@ void Game::update() {
 		ballDy = -ballDy;
 	}
 
-	const auto player_pos = ((Player*)&*entities[0])->get_pos();
-	const Vector2 d = {
-		player_pos.x - camera.target.x,
-		player_pos.y - camera.target.y,
-	};
-	if (std::abs(d.x) > camera_play) {
-		const float v = d.x / camera_follow;
-		camera.target.x += v * dt;
-	}
-	if (std::abs(d.y) > camera_play) {
-		const float v = d.y / camera_follow;
-		camera.target.y += v * dt;
-	}
+	scene->update(dt);
 }
-void Game::draw() {
+void Game::draw() const {
 	BeginDrawing();
 
-	ClearBackground(RAYWHITE);
+	scene->draw();
 
 	DrawCircle(ballX, ballY, ballR, RED);
-
-	BeginMode2D(camera);
-
-	for (const auto &entity : entities) {
-		entity->draw();
-	}
-
-	level->draw();
-
-	DrawCircle(0, 0, 0.1, GREEN);
-	DrawCircle(0, 1, 0.1, GREEN);
-
-	EndMode2D();
 
 	DrawFPS(10, 10);
 
 	EndDrawing();
+}
+void Game::update_scene() {
+	switch (scene->get_action()) {
+		case SceneAction::Continue: break;
+		case SceneAction::NextLevel: {
+			next_level();
+		} break;
+		case SceneAction::MainMenu: {
+			exit(1);
+		} break;
+	}
 }

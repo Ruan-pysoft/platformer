@@ -1,24 +1,20 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
-#include "raylib.h"
-
-#include "entity.hpp"
-#include "level.hpp"
+#include "scene.hpp"
 
 class Game {
-	std::unique_ptr<Level> level;
-	std::vector<std::unique_ptr<Entity>> entities;
-	Camera2D camera;
+	std::unique_ptr<Scene> scene;
+	int level_idx;
 public:
-	float gravity;
-
 	Game();
 
-	const Level &get_level() const;
+	Scene &get_scene() const;
+	void set_scene(std::unique_ptr<Scene> new_scene);
+	void next_level();
 
 	void update();
-	void draw();
+	void draw() const;
+	void update_scene();
 };

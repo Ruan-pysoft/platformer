@@ -32,6 +32,7 @@ int main() {
 		inp_mgr.handleInputs();
 		game.update();
 		game.draw();
+		game.update_scene();
 	}
 
 	CloseAudioDevice();

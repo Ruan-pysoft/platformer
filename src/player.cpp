@@ -4,56 +4,38 @@
 /*#include <iostream>*/
 
 #include "actions.hpp"
-#include "game.hpp"
+#include "level.hpp"
 
 static const float jump_vel = 12;
 static const float walk_acc = 16;
 static const float walk_dec = 32;
 static const float walk_speed = 20;
 static const float friction = 12;
+static bool try_jump = false;
+static bool try_djump = false;
+static bool walk_left = false;
+static bool walk_right = false;
 static bool walking = false;
 static bool has_djumped = false;
 
 static constexpr float EPS = 1.0f / 1024 / 1024;
 
-Player::Player(Game &game, Vector2 spawn)
-	: game(game),
-	  pos(spawn),
-	  vel { 0, 0 } {
-	Action::Jump.register_cb([this](float) {
-		if (on_ground()) {
-			vel.y = -jump_vel;
-		}
+Player::Player() : pos { 0, 0 }, vel { 0, 0 } {
+	Action::Jump.register_cb([](float) {
+		try_jump = true;
 	});
-	Action::DoubleJump.register_cb([this]() {
-		if (!on_ground() && !has_djumped) {
-			vel.y = -jump_vel;
-			has_djumped = true;
-		}
+	Action::DoubleJump.register_cb([]() {
+		try_djump = true;
 	});
-	Action::Left.register_cb([this](float dt) {
-		walking = true;
-		if (vel.x > 0) {
-			vel.x -= walk_dec * dt;
-		} else if (vel.x > -walk_speed) {
-			vel.x -= walk_acc * dt;
-			if (vel.x < -walk_speed) vel.x = -walk_speed;
-		}
+	Action::Left.register_cb([](float) {
+		walk_left = true;
 	});
-	Action::Right.register_cb([this](float dt) {
-		walking = true;
-		if (vel.x < 0) {
-			vel.x += walk_dec * dt;
-		} else if (vel.x < walk_speed) {
-			vel.x += walk_acc * dt;
-			if (vel.x > walk_speed) vel.x = walk_speed;
-		}
+	Action::Right.register_cb([](float) {
+		walk_right = true;
 	});
 }
 
-bool Player::on_ground() {
-	const auto &lvl = game.get_level();
-
+bool Player::on_ground(Level &level) {
 	if (pos.y >= 0) return true;
 
 	for (int dx = -1; dx <= 1; ++dx) {
@@ -61,7 +43,7 @@ bool Player::on_ground() {
 			pos.x + dx,
 			pos.y + 0.5f,
 		};
-		const auto collider = lvl.get_collider(check_point.x, check_point.y);
+		const auto collider = level.get_collider(check_point.x, check_point.y);
 
 		if (collider.width == 0 && collider.height == 0) continue;
 		if (collider.x >= pos.x + size.x/2 || collider.x + collider.width <= pos.x - size.x/2) continue;
@@ -79,9 +61,7 @@ bool Player::on_ground() {
 	return false;
 }
 
-void Player::resolve_collisions_x() {
-	const auto &lvl = game.get_level();
-
+void Player::resolve_collisions_x(Level &level) {
 	const float left_edge = pos.x - size.x/2;
 	const float right_edge = pos.x + size.x/2;
 
@@ -91,7 +71,7 @@ void Player::resolve_collisions_x() {
 				pos.x + dx,
 				pos.y - 0.5f + dy,
 			};
-			const auto collider = lvl.get_collider(check_point.x, check_point.y);
+			const auto collider = level.get_collider(check_point.x, check_point.y);
 
 			if (collider.width == 0 && collider.height == 0) continue;
 			if (collider.y + EPS >= pos.y || collider.y + collider.height - EPS <= pos.y - size.y) continue;
@@ -127,9 +107,7 @@ void Player::resolve_collisions_x() {
 		}
 	}
 }
-void Player::resolve_collisions_y() {
-	const auto &lvl = game.get_level();
-
+void Player::resolve_collisions_y(Level &level) {
 	if (pos.y > 0) pos.y = 0;
 
 	const float top_edge = pos.y - size.y;
@@ -141,7 +119,7 @@ void Player::resolve_collisions_y() {
 				pos.x + dx,
 				pos.y - 0.5f + dy,
 			};
-			const auto collider = lvl.get_collider(check_point.x, check_point.y);
+			const auto collider = level.get_collider(check_point.x, check_point.y);
 
 			if (collider.width == 0 && collider.height == 0) continue;
 			if (collider.x + EPS >= pos.x + size.x/2 || collider.x + collider.width - EPS <= pos.x - size.x/2) continue;
@@ -178,12 +156,61 @@ void Player::resolve_collisions_y() {
 	}
 }
 
+Player &Player::get_player() {
+	static Player instance{};
+
+	return instance;
+}
+
 Vector2 Player::get_pos() const {
 	return pos;
 }
+void Player::reset(Vector2 pos) {
+	this->pos = pos;
 
-void Player::update(float dt) {
-	if (on_ground()) {
+	try_jump = false;
+	try_djump = false;
+	walk_left = false;
+	walk_right = false;
+	walking = false;
+	has_djumped = false;
+}
+
+void Player::update(Level &level, float dt) {
+	const bool grounded = on_ground(level);
+
+	/*if (try_jump) std::cerr << "Trying to jump!" << std::endl;
+	if (try_djump) std::cerr << "Trying to double jump!" << std::endl;
+	if (walk_left) std::cerr << "Walking left!" << std::endl;
+	if (walk_right) std::cerr << "Walking right!" << std::endl;*/
+
+	if (try_jump && grounded) {
+		vel.y = -jump_vel;
+	}
+	if (try_djump && !grounded && !has_djumped) {
+		vel.y = -jump_vel;
+		has_djumped = true;
+	}
+	if (walk_left) {
+		walking = true;
+		if (vel.x > 0) {
+			vel.x -= walk_dec * dt;
+		} else if (vel.x > -walk_speed) {
+			vel.x -= walk_acc * dt;
+			if (vel.x < -walk_speed) vel.x = -walk_speed;
+		}
+	}
+	if (walk_right) {
+		walking = true;
+		if (vel.x < 0) {
+			vel.x += walk_dec * dt;
+		} else if (vel.x < walk_speed) {
+			vel.x += walk_acc * dt;
+			if (vel.x > walk_speed) vel.x = walk_speed;
+		}
+	}
+
+	if (on_ground(level)) {
 		has_djumped = false;
 
 		vel.y = std::min(0.f, vel.y);
@@ -194,24 +221,28 @@ void Player::update(float dt) {
 			else vel.x += friction * dt;
 		}
 	} else {
-		vel.y += game.gravity * dt;
+		vel.y += level.gravity * dt;
 	}
 
 	if (std::abs(vel.y) <= std::abs(vel.x)) {
 		pos.x += vel.x * dt;
-		resolve_collisions_x();
+		resolve_collisions_x(level);
 
 		pos.y += vel.y * dt;
-		resolve_collisions_y();
+		resolve_collisions_y(level);
 	} else {
 		pos.y += vel.y * dt;
-		resolve_collisions_y();
+		resolve_collisions_y(level);
 
 		pos.x += vel.x * dt;
-		resolve_collisions_x();
+		resolve_collisions_x(level);
 	}
 
 	walking = false;
+	try_jump = false;
+	try_djump = false;
+	walk_left = false;
+	walk_right = false;
 }
 void Player::draw() const {
 	DrawRectangleV(

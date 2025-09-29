@@ -2,19 +2,24 @@
 
 #include <iostream>
 
+#include "globals.hpp"
+#include "player.hpp"
+#include "scene.hpp"
+
+static constexpr float camera_play = 4;
+static constexpr float camera_follow = 0.5f;
+
 Vector2 Level::get_offset() const {
 	return { -w/2.0f, -float(h) };
 }
 
-Level::Level(const Tile *tilemap, int w, int h, Vector2 player_spawn) : w(w), h(h), player_spawn(player_spawn) {
-	tiles.reserve(w*h);
-	tiles.assign(tilemap, tilemap + w*h);
-}
-Level::Level(Image image, Vector2 player_spawn) : w(image.width), h(image.height), player_spawn(player_spawn) {
-	tiles.reserve(w*h);
+static std::vector<Tile> tilemap_of(Image image) {
+	std::vector<Tile> tiles;
+
+	tiles.reserve(image.width*image.height);
 	using namespace Levels;
-	for (int y = 0; y < h; ++y) {
-		for (int x = 0; x < w; ++x) {
+	for (int y = 0; y < image.height; ++y) {
+		for (int x = 0; x < image.width; ++x) {
 			const auto color = GetImageColor(image, x, y);
 			for (int i = 0; i < int(sizeof(colormap)/sizeof(*colormap)); ++i) {
 				const auto r = colormap[i].color.r == color.r;
@@ -31,10 +36,53 @@ Level::Level(Image image, Vector2 player_spawn) : w(image.width), h(image.height
 		matched_color:;
 		}
 	}
+
+	return tiles;
+}
+
+Level::Level(const Tile *tilemap, int w, int h, Vector2 player_spawn)
+	: tiles(tilemap, tilemap + w*h), w(w), h(h), player(Player::get_player()),
+	player_spawn { player_spawn.x, h + player_spawn.y }, action(SceneAction::Continue),
+	gravity(20)
+{
+	player.reset(get_player_spawn());
+
+	camera.target = get_player_spawn();
+	camera.offset = {
+		global::WINDOW_WIDTH / 2.0f,
+		global::WINDOW_HEIGHT / 2.0f,
+	};
+	camera.rotation = 0;
+	camera.zoom = global::PPU - 1;
+}
+Level::Level(Image image, Vector2 player_spawn)
+	: tiles(tilemap_of(image)), w(image.width), h(image.height),
+	player(Player::get_player()), player_spawn { player_spawn.x, h + player_spawn.y },
+	action(SceneAction::Continue), gravity(20)
+{
+	player.reset(get_player_spawn());
+
+	camera.target = get_player_spawn();
+	camera.offset = {
+		global::WINDOW_WIDTH / 2.0f,
+		global::WINDOW_HEIGHT / 2.0f,
+	};
+	camera.rotation = 0;
+	camera.zoom = global::PPU - 1;
 }
 Vector2 Level::get_player_spawn() const {
 	const auto offset = get_offset();
 	return { player_spawn.x + offset.x + 0.5f, player_spawn.y + offset.y };
+}
+
+void Level::reset() {
+	player.reset(get_player_spawn());
+}
+void Level::complete() {
+	action = SceneAction::NextLevel;
+}
+void Level::exit() {
+	action = SceneAction::MainMenu;
 }
 
 Rectangle Level::get_collider(float x, float y) const {
@@ -45,13 +93,34 @@ Rectangle Level::get_collider(float x, float y) const {
 		return { 0, 0, 0, 0 };
 	}
 	const auto &tile = tiles[lvl_x + lvl_y*w];
-	if (!tile.is_solid) {
+	if (tile.type == TileType::Empty) {
 		return { 0, 0, 0, 0 };
 	}
 	return { lvl_x + offset.x, lvl_y + offset.y, 1, 1 };
 }
 
-void Level::draw() {
+void Level::update(float dt) {
+	player.update(*this, dt);
+
+	const auto player_pos = player.get_pos();
+	const Vector2 d = {
+		player_pos.x - camera.target.x,
+		player_pos.y - camera.target.y,
+	};
+	if (std::abs(d.x) > camera_play) {
+		const float v = d.x / camera_follow;
+		camera.target.x += v * dt;
+	}
+	if (std::abs(d.y) > camera_play) {
+		const float v = d.y / camera_follow;
+		camera.target.y += v * dt;
+	}
+}
+void Level::draw() const {
+	ClearBackground(RAYWHITE);
+
+	BeginMode2D(camera);
+
 	const auto offset = get_offset();
 	for (int y = 0; y < h; ++y) {
 		for (int x = 0; x < w; ++x) {
@@ -61,4 +130,11 @@ void Level::draw() {
 			);
 		}
 	}
+
+	player.draw();
+
+	EndMode2D();
+}
+SceneAction Level::get_action() const {
+	return action;
 }

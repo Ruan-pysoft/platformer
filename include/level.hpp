@@ -4,29 +4,45 @@
 
 #include "raylib.h"
 
-struct Tile {
-	constexpr Tile() : color(Color { 0, 0, 0, 0 }), is_solid(false) {}
-	constexpr Tile(Color color) : color(color), is_solid(true) {}
-	constexpr Tile(Color color, bool is_solid) : color(color), is_solid(is_solid) {}
+#include "scene.hpp"
 
+enum class TileType { Empty, Solid, Danger, Goal };
+
+struct Tile {
+	constexpr Tile() : type(TileType::Empty), color(Color { 0, 0, 0, 0 }) {}
+	constexpr Tile(Color color) : type(TileType::Solid), color(color) {}
+	constexpr Tile(Color color, TileType type) : type(type), color(color) {}
+
+	TileType type;
 	Color color;
-	bool is_solid;
 };
 
-class Level {
-	std::vector<Tile> tiles;
+class Player;
+class Level : public Scene {
+	const std::vector<Tile> tiles;
 	int w, h;
+	Player &player;
 	Vector2 player_spawn;
+	SceneAction action;
+	Camera2D camera;
 
 	Vector2 get_offset() const;
 public:
+	float gravity;
+
 	Level(const Tile *tilemap, int w, int h, Vector2 player_spawn);
 	Level(Image image, Vector2 player_spawn);
 	Vector2 get_player_spawn() const;
 
+	void reset();
+	void complete();
+	void exit();
+
 	Rectangle get_collider(float x, float y) const;
 
-	void draw();
+	void update(float dt) override;
+	void draw() const override;
+	SceneAction get_action() const override;
 };
 
 namespace Levels {
@@ -34,8 +50,9 @@ namespace Levels {
 static constexpr Tile floor = Tile(BLACK);
 static constexpr Tile air = Tile();
 static constexpr Tile wall = Tile(BROWN);
-static constexpr Tile ghost = Tile(Color { 195, 195, 255, 127 }, false);
-static constexpr Tile flag = Tile(Color { 0, 255, 0, 255 }, false);
+static constexpr Tile ghost = Tile({ 195, 195, 255, 127 }, TileType::Empty);
+static constexpr Tile flag = Tile({ 0, 255, 0, 255 }, TileType::Goal);
+static constexpr Tile lava = Tile({ 255, 63, 15, 255 }, TileType::Danger);
 
 static constexpr struct {
 	Color color;
@@ -46,17 +63,9 @@ static constexpr struct {
 	{ { 127, 127, 127, 255 }, wall },
 	{ { 195, 195, 255, 255 }, ghost },
 	{ { 0, 255, 0, 255 },     flag },
+	{ { 255, 0, 0, 255 },     lava },
 };
 
-const int lvl1_width = 20;
-const int lvl1_height = 5;
-const Tile lvl1_tileset[lvl1_width * lvl1_height] = {
-	wall,  air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   wall,
-	wall,  air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   air,   wall,
-	wall,  air,   air,   air,   air,   air,   air,   air,   air,   ghost, ghost, air,   air,   air,   air,   air,   air,   air,   air,   wall,
-	wall,  air,   air,   air,   air,   air,   air,   air,   air,   ghost, ghost, air,   air,   air,   air,   air,   air,   air,   air,   wall,
-	floor, floor, floor, floor, floor, floor, floor, floor, floor, floor, floor, floor, floor, floor, floor, floor, floor, floor, floor, floor,
-};
-const Vector2 lvl1_spawn = { 1, 2 };
+const Vector2 lvl1_spawn = { 2, -4 };
 
 }
