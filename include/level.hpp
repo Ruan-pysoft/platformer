@@ -23,15 +23,15 @@ class Level : public Scene {
 	int w, h;
 	Player &player;
 	Vector2 player_spawn;
-	SceneAction action;
 	Camera2D camera;
+	size_t level_nr;
 
 	Vector2 get_offset() const;
 public:
 	float gravity;
 
-	Level(const Tile *tilemap, int w, int h, Vector2 player_spawn);
-	Level(Image image, Vector2 player_spawn);
+	Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_spawn);
+	Level(size_t level_nr, Image image, Vector2 player_spawn);
 	Vector2 get_player_spawn() const;
 
 	void reset();
@@ -43,7 +43,6 @@ public:
 
 	void update(float dt) override;
 	void draw() const override;
-	SceneAction get_action() const override;
 };
 
 namespace Levels {

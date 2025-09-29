@@ -218,7 +218,12 @@ void Player::reset(Vector2 pos) {
 void Player::update(Level &level, float dt) {
 	const bool grounded = on_ground(level);
 
-	if (was_killed || achieved_goal) return;
+	if (was_killed) {
+		level.reset(); return;
+	}
+	if (achieved_goal) {
+		level.complete(); return;
+	}
 
 	/*if (try_jump) std::cerr << "Trying to jump!" << std::endl;
 	if (try_djump) std::cerr << "Trying to double jump!" << std::endl;

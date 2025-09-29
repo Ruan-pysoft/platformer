@@ -3,12 +3,13 @@
 #include <iostream>
 
 #include "globals.hpp"
+#include "levels_list.hpp"
+#include "main_menu.hpp"
 #include "player.hpp"
 #include "scene.hpp"
 
 static constexpr float camera_play = 4;
 static constexpr float camera_follow = 0.5f;
-static bool camera_following = false;
 
 Vector2 Level::get_offset() const {
 	return { -w/2.0f, -float(h) };
@@ -41,10 +42,11 @@ static std::vector<Tile> tilemap_of(Image image) {
 	return tiles;
 }
 
-Level::Level(const Tile *tilemap, int w, int h, Vector2 player_spawn)
-	: tiles(tilemap, tilemap + w*h), w(w), h(h), player(Player::get_player()),
-	player_spawn { player_spawn.x, h + player_spawn.y }, action(SceneAction::Continue),
-	gravity(20)
+Level::Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_spawn)
+	: tiles(tilemap, tilemap + w*h), w(w), h(h),
+	player(Player::get_player()),
+	player_spawn { player_spawn.x, h + player_spawn.y },
+	level_nr(level_nr), gravity(20)
 {
 	player.reset(get_player_spawn());
 
@@ -56,10 +58,10 @@ Level::Level(const Tile *tilemap, int w, int h, Vector2 player_spawn)
 	camera.rotation = 0;
 	camera.zoom = global::PPU - 1;
 }
-Level::Level(Image image, Vector2 player_spawn)
+Level::Level(size_t level_nr, Image image, Vector2 player_spawn)
 	: tiles(tilemap_of(image)), w(image.width), h(image.height),
 	player(Player::get_player()), player_spawn { player_spawn.x, h + player_spawn.y },
-	action(SceneAction::Continue), gravity(20)
+	level_nr(level_nr), gravity(20)
 {
 	player.reset(get_player_spawn());
 
@@ -80,10 +82,13 @@ void Level::reset() {
 	player.reset(get_player_spawn());
 }
 void Level::complete() {
-	action = SceneAction::NextLevel;
+	transition.next = Levels::make_level(level_nr+1);
+	if (transition.next == nullptr) {
+		transition.next = std::make_unique<MainMenu>();
+	}
 }
 void Level::exit() {
-	action = SceneAction::MainMenu;
+	transition.next = std::make_unique<MainMenu>();
 }
 
 Rectangle Level::get_collider(float x, float y) const {
@@ -144,7 +149,4 @@ void Level::draw() const {
 	}
 
 	EndMode2D();
-}
-SceneAction Level::get_action() const {
-	return action;
 }

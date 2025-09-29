@@ -1,5 +1,6 @@
 #include "main_menu.hpp"
 
+#include "levels_list.hpp"
 #include "raylib.h"
 
 #include "globals.hpp"
@@ -28,7 +29,7 @@ void MainMenu::update(float) {
 
 	play_button_hovered = CheckCollisionPointRec(mouse_pos, play_button_rect);
 	if (play_button_hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-		action = SceneAction::NextLevel;
+		transition.next = Levels::make_level(0);
 	}
 };
 void MainMenu::draw() const {
@@ -62,7 +63,4 @@ void MainMenu::draw() const {
 		play_button_text_size,
 		BLACK
 	);
-}
-SceneAction MainMenu::get_action() const {
-	return action;
 }

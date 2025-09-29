@@ -1,4 +1,3 @@
- - change from `SceneAction` enum to `SceneTransition` struct
  - level counter
  - move file-level `static` state variables into class variables
  - move some variables from `globals` to some config class – eg. allow dynamic window resizing
