@@ -1,6 +1,7 @@
 #include "game.hpp"
 
 #include <cstdlib>
+#include <iostream>
 #include <memory>
 
 #include "raylib.h"
@@ -15,6 +16,7 @@ static const struct {
 	Vector2 spawn;
 } levels[] = {
 	{ "levels/level1.png", Levels::lvl1_spawn },
+	{ "levels/level2.png", Levels::lvl2_spawn },
 };
 
 Game::Game() {
@@ -33,7 +35,11 @@ void Game::next_level() {
 	using namespace Levels;
 
 	++level_idx;
-	if (level_idx < 0 || level_idx >= sizeof(levels)/sizeof(*levels)) exit(1);
+	if (level_idx < 0) exit(1);
+	if (level_idx >= sizeof(levels)/sizeof(*levels)) {
+		std::cout << "You've finished the game!" << std::endl;
+		exit(0);
+	}
 
 	const auto level_img = LoadImage(levels[level_idx].file);
 	set_scene(std::make_unique<Level>(Level(level_img, levels[level_idx].spawn)));

@@ -44,6 +44,7 @@ extern ActionSustain Jump;
 extern ActionOnce DoubleJump;
 extern ActionSustain Left;
 extern ActionSustain Right;
+extern ActionSustain Fly;
 
 static const struct {
 	KeyboardKey key;
@@ -72,6 +73,7 @@ static const struct {
 	{ KEY_SPACE, Jump },
 	{ KEY_W, Jump },
 	{ KEY_UP, Jump },
+	{ KEY_F, Fly },
 };
 
 }

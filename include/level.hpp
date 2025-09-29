@@ -39,6 +39,7 @@ public:
 	void exit();
 
 	Rectangle get_collider(float x, float y) const;
+	TileType get_tile_type(float x, float y) const;
 
 	void update(float dt) override;
 	void draw() const override;
@@ -67,5 +68,6 @@ static constexpr struct {
 };
 
 const Vector2 lvl1_spawn = { 2, -4 };
+const Vector2 lvl2_spawn = { 16, -1 };
 
 }

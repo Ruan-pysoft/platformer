@@ -66,5 +66,6 @@ ActionSustain Jump{};
 ActionOnce DoubleJump{};
 ActionSustain Left{};
 ActionSustain Right{};
+ActionSustain Fly{};
 
 }

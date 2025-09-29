@@ -17,8 +17,11 @@ static bool walk_left = false;
 static bool walk_right = false;
 static bool walking = false;
 static bool has_djumped = false;
+static bool was_killed = false;
+static bool achieved_goal = false;
+static bool flying = false;
 
-static constexpr float EPS = 1.0f / 1024 / 1024;
+static constexpr float EPS = 1.0f / 1024;
 
 Player::Player() : pos { 0, 0 }, vel { 0, 0 } {
 	Action::Jump.register_cb([](float) {
@@ -32,6 +35,9 @@ Player::Player() : pos { 0, 0 }, vel { 0, 0 } {
 	});
 	Action::Right.register_cb([](float) {
 		walk_right = true;
+	});
+	Action::Fly.register_cb([](float) {
+		flying = true;
 	});
 }
 
@@ -47,6 +53,10 @@ bool Player::on_ground(Level &level) {
 
 		if (collider.width == 0 && collider.height == 0) continue;
 		if (collider.x >= pos.x + size.x/2 || collider.x + collider.width <= pos.x - size.x/2) continue;
+
+		const TileType type = level.get_tile_type(check_point.x, check_point.y);
+
+		if (type != TileType::Solid) continue;
 
 		if (collider.y == pos.y) return true;
 
@@ -72,7 +82,9 @@ void Player::resolve_collisions_x(Level &level) {
 				pos.y - 0.5f + dy,
 			};
 			const auto collider = level.get_collider(check_point.x, check_point.y);
+			const auto type = level.get_tile_type(check_point.x, check_point.y);
 
+			if (type == TileType::Empty) continue;
 			if (collider.width == 0 && collider.height == 0) continue;
 			if (collider.y + EPS >= pos.y || collider.y + collider.height - EPS <= pos.y - size.y) continue;
 
@@ -81,28 +93,40 @@ void Player::resolve_collisions_x(Level &level) {
 			const float right_dist_near = collider.x - right_edge;
 			const float right_dist_far  = (collider.x + collider.width) - right_edge;
 
+			const bool touching_left = left_dist_near < 0 && left_dist_far > 0;
+			const bool touching_right = right_dist_near < 0 && right_dist_far > 0;
 			const bool inside_left = left_dist_near < -EPS && left_dist_far > 0;
 			const bool inside_right = right_dist_near < -EPS && right_dist_far > 0;
 
 			const float left_overlap = -left_dist_near; // only if inside_left is true
 			const float right_overlap = -right_dist_near; // only if inside_right is true
 
-			if (inside_left || inside_right) {
-				/*std::cerr << "Overlapping! (" << pos.x << ',' << pos.y << ')' << std::endl;
-				std::cerr << "At relative block " << dx << ',' << dy << std::endl;
-				std::cerr << "Left distances:  " << left_dist_near << " // " << left_dist_far << std::endl;
-				std::cerr << "Right distances: " << right_dist_near << " // " << right_dist_far << std::endl;
-				std::cerr << "Left overlap:  " << left_overlap << std::endl;
-				std::cerr << "Right overlap: " << right_overlap << std::endl;*/
-				if (left_overlap < right_overlap) {
-					/*std::cerr << "Resolving collision on the left rightwards..." << std::endl;*/
-					pos.x = collider.x + collider.width + size.x/2;
-					if (vel.x < 0) vel.x = 0;
-				} else {
-					/*std::cerr << "Resolving collision on the right leftwards..." << std::endl;*/
-					pos.x = collider.x - size.x/2;
-					if (vel.x > 0) vel.x = 0;
-				}
+			if (touching_left || touching_right) switch (type) {
+				case TileType::Solid: if (inside_left || inside_right) {
+					/*std::cerr << "Overlapping! (" << pos.x << ',' << pos.y << ')' << std::endl;
+					std::cerr << "At relative block " << dx << ',' << dy << std::endl;
+					std::cerr << "Left distances:  " << left_dist_near << " // " << left_dist_far << std::endl;
+					std::cerr << "Right distances: " << right_dist_near << " // " << right_dist_far << std::endl;
+					std::cerr << "Left overlap:  " << left_overlap << std::endl;
+					std::cerr << "Right overlap: " << right_overlap << std::endl;*/
+
+					if (left_overlap < right_overlap) {
+						/*std::cerr << "Resolving collision on the left rightwards..." << std::endl;*/
+						pos.x = collider.x + collider.width + size.x/2;
+						if (vel.x < 0) vel.x = 0;
+					} else {
+						/*std::cerr << "Resolving collision on the right leftwards..." << std::endl;*/
+						pos.x = collider.x - size.x/2;
+						if (vel.x > 0) vel.x = 0;
+					}
+				} break;
+				case TileType::Danger: {
+					was_killed = true;
+				} break;
+				case TileType::Goal: {
+					achieved_goal = true;
+				} break;
+				case TileType::Empty: break;
 			}
 		}
 	}
@@ -120,6 +144,7 @@ void Player::resolve_collisions_y(Level &level) {
 				pos.y - 0.5f + dy,
 			};
 			const auto collider = level.get_collider(check_point.x, check_point.y);
+			const auto type = level.get_tile_type(check_point.x, check_point.y);
 
 			if (collider.width == 0 && collider.height == 0) continue;
 			if (collider.x + EPS >= pos.x + size.x/2 || collider.x + collider.width - EPS <= pos.x - size.x/2) continue;
@@ -129,28 +154,39 @@ void Player::resolve_collisions_y(Level &level) {
 			const float bottom_dist_near = collider.y - bottom_edge;
 			const float bottom_dist_far = (collider.y + collider.height) - bottom_edge;
 
+			const bool touching_top = top_dist_near < 0 && top_dist_far > 0;
+			const bool touching_bottom = bottom_dist_near < 0 && bottom_dist_far > 0;
 			const bool inside_top = top_dist_near < -EPS && top_dist_far > 0;
 			const bool inside_bottom = bottom_dist_near < -EPS && bottom_dist_far > 0;
 
 			const float top_overlap = -top_dist_near; // only if inside_top is true
 			const float bottom_overlap = -bottom_dist_near; // only if inside_bottom is true
 
-			if (inside_top || inside_bottom) {
-				/*std::cerr << "Overlapping! (" << pos.x << ',' << pos.y << ')' << std::endl;
-				std::cerr << "At relative block " << dx << ',' << dy << std::endl;
-				std::cerr << "Top distances:    " << top_dist_near << " // " << top_dist_far << std::endl;
-				std::cerr << "Bottom distances: " << bottom_dist_near << " // " << bottom_dist_far << std::endl;
-				std::cerr << "Top overlap:    " << top_overlap << std::endl;
-				std::cerr << "Bottom overlap: " << bottom_overlap << std::endl;*/
-				if (top_overlap < bottom_overlap) {
-					/*std::cerr << "Resolving collision on the top downwards..." << std::endl;*/
-					pos.y = collider.y + collider.height + size.y;
-					if (vel.y < 0) vel.y = 0;
-				} else {
-					/*std::cerr << "Resolving collision on the bottom upwards..." << std::endl;*/
-					pos.y = collider.y;
-					if (vel.y > 0) vel.y = 0;
-				}
+			if (touching_top || touching_bottom) switch (type) {
+				case TileType::Solid: if (inside_top || inside_bottom) {
+					/*std::cerr << "Overlapping! (" << pos.x << ',' << pos.y << ')' << std::endl;
+					std::cerr << "At relative block " << dx << ',' << dy << std::endl;
+					std::cerr << "Top distances:    " << top_dist_near << " // " << top_dist_far << std::endl;
+					std::cerr << "Bottom distances: " << bottom_dist_near << " // " << bottom_dist_far << std::endl;
+					std::cerr << "Top overlap:    " << top_overlap << std::endl;
+					std::cerr << "Bottom overlap: " << bottom_overlap << std::endl;*/
+					if (top_overlap < bottom_overlap) {
+						/*std::cerr << "Resolving collision on the top downwards..." << std::endl;*/
+						pos.y = collider.y + collider.height + size.y;
+						if (vel.y < 0) vel.y = 0;
+					} else {
+						/*std::cerr << "Resolving collision on the bottom upwards..." << std::endl;*/
+						pos.y = collider.y;
+						if (vel.y > 0) vel.y = 0;
+					}
+				} break;
+				case TileType::Danger: {
+					was_killed = true;
+				} break;
+				case TileType::Goal: {
+					achieved_goal = true;
+				} break;
+				case TileType::Empty: break;
 			}
 		}
 	}
@@ -174,10 +210,15 @@ void Player::reset(Vector2 pos) {
 	walk_right = false;
 	walking = false;
 	has_djumped = false;
+	was_killed = false;
+	achieved_goal = false;
+	flying = false;
 }
 
 void Player::update(Level &level, float dt) {
 	const bool grounded = on_ground(level);
+
+	if (was_killed || achieved_goal) return;
 
 	/*if (try_jump) std::cerr << "Trying to jump!" << std::endl;
 	if (try_djump) std::cerr << "Trying to double jump!" << std::endl;
@@ -209,6 +250,9 @@ void Player::update(Level &level, float dt) {
 			if (vel.x > walk_speed) vel.x = walk_speed;
 		}
 	}
+	if (flying) {
+		vel.y = std::min(vel.y, -jump_vel / 2.0f);
+	}
 
 	if (on_ground(level)) {
 		has_djumped = false;
@@ -221,7 +265,7 @@ void Player::update(Level &level, float dt) {
 			else vel.x += friction * dt;
 		}
 	} else {
-		vel.y += level.gravity * dt;
+		if (!flying) vel.y += level.gravity * dt;
 	}
 
 	if (std::abs(vel.y) <= std::abs(vel.x)) {
@@ -243,6 +287,10 @@ void Player::update(Level &level, float dt) {
 	try_djump = false;
 	walk_left = false;
 	walk_right = false;
+	flying = false;
+
+	if (was_killed) level.reset();
+	if (achieved_goal) level.complete();
 }
 void Player::draw() const {
 	DrawRectangleV(

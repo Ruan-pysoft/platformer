@@ -8,6 +8,7 @@
 
 static constexpr float camera_play = 4;
 static constexpr float camera_follow = 0.5f;
+static bool camera_following = false;
 
 Vector2 Level::get_offset() const {
 	return { -w/2.0f, -float(h) };
@@ -97,6 +98,15 @@ Rectangle Level::get_collider(float x, float y) const {
 		return { 0, 0, 0, 0 };
 	}
 	return { lvl_x + offset.x, lvl_y + offset.y, 1, 1 };
+}
+TileType Level::get_tile_type(float x, float y) const {
+	const auto offset = get_offset();
+	const int lvl_x = x - offset.x;
+	const int lvl_y = y - offset.y;
+	if (lvl_x < 0 || lvl_x >= w || lvl_y < 0 || lvl_y >= h) {
+		return TileType::Empty;
+	}
+	return tiles[lvl_x + lvl_y*w].type;
 }
 
 void Level::update(float dt) {
