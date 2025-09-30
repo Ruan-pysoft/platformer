@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <vector>
 
 #include "raylib.h"
@@ -17,6 +18,15 @@ struct Tile {
 	Color color;
 };
 
+class Level;
+struct LevelText {
+	std::string text;
+	Color color;
+	Vector2 pos;
+
+	void draw(const Level &level, const Camera2D &camera) const;
+};
+
 class Player;
 class Level : public Scene {
 	const std::vector<Tile> tiles;
@@ -25,13 +35,16 @@ class Level : public Scene {
 	Vector2 player_spawn;
 	Camera2D camera;
 	size_t level_nr;
+	std::vector<LevelText> texts;
 
-	Vector2 get_offset() const;
 public:
 	float gravity;
 
+	Vector2 get_offset() const;
+
 	Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_spawn);
 	Level(size_t level_nr, Image image, Vector2 player_spawn);
+	void add_texts(std::vector<LevelText> texts);
 	~Level();
 	Vector2 get_player_spawn() const;
 
@@ -66,8 +79,5 @@ static constexpr struct {
 	{ { 0, 255, 0, 255 },     flag },
 	{ { 255, 0, 0, 255 },     lava },
 };
-
-const Vector2 lvl1_spawn = { 2, -4 };
-const Vector2 lvl2_spawn = { 16, -1 };
 
 }

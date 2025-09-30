@@ -13,6 +13,7 @@ namespace Levels {
 struct LevelInfo {
 	std::string filename;
 	Vector2 spawn;
+	std::vector<LevelText> texts;
 };
 
 extern const std::vector<LevelInfo> levels;

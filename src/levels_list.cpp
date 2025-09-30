@@ -5,8 +5,23 @@
 namespace Levels {
 
 const std::vector<LevelInfo> levels = {
-	{ "levels/level1.png", Levels::lvl1_spawn },
-	{ "levels/level2.png", Levels::lvl2_spawn },
+	{ "levels/1.png", { 1, -1 }, {
+		{ "Move with the arrow keys or A and D", BLACK, { 2, -4 } }
+	} },
+	{ "levels/2.png", { 1, -1 }, {
+		{ "Jump with W, up arrow, or space", BLACK, { 2, -4 } }
+	} },
+	{ "levels/3.png", { 1, -1 }, {
+		{ "You can also double jump", BLACK, { 2, -4 } }
+	} },
+	{ "levels/4.png", { 1, -1 }, {
+		{ "Red means danger", BLACK, { 2, -4 } }
+	} },
+	{ "levels/5.png", { 1, -1 }, {
+		{ "Double jump to cross the gap", BLACK, { 2, -4 } }
+	} },
+	{ "levels/level1.png", { 2, -4 }, {} },
+	{ "levels/level2.png", { 16, -1 }, {} },
 };
 
 std::unique_ptr<Level> make_level(size_t idx) {
@@ -15,8 +30,10 @@ std::unique_ptr<Level> make_level(size_t idx) {
 	if (idx >= levels.size()) return nullptr;
 
 	const auto level_img = LoadImage(levels[idx].filename.c_str());
-	return std::make_unique<Level>(idx, level_img, levels[idx].spawn);
+	auto res = std::make_unique<Level>(idx, level_img, levels[idx].spawn);
+	res->add_texts(levels[idx].texts);
 	UnloadImage(level_img);
+	return res;
 }
 
 };

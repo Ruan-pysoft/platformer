@@ -4,7 +4,6 @@
  - pause screen
  - separate collision detection from handling
  - timer
- - ! tutorial level(s)
  - more levels
  - death count
  - checkpoints

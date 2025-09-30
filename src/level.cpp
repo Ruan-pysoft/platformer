@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 
+#include "raylib.h"
+
 #include "globals.hpp"
 #include "levels_list.hpp"
 #include "main_menu.hpp"
@@ -11,6 +13,16 @@
 
 static constexpr float camera_play = 4;
 static constexpr float camera_follow = 0.5f;
+
+void LevelText::draw(const Level &level, const Camera2D &camera) const {
+	const Vector2 lvl_offset = level.get_offset();
+	const Vector2 world_pos = { pos.x + lvl_offset.x, pos.y + lvl_offset.y - 1 };
+
+	const Vector2 scr_pos = GetWorldToScreen2D(world_pos, camera);
+	const int font_size = camera.zoom;
+
+	DrawTextEx(GetFontDefault(), text.c_str(), scr_pos, font_size, 0.0f, color);
+}
 
 Vector2 Level::get_offset() const {
 	return { -w/2.0f, -float(h) };
@@ -57,7 +69,7 @@ Level::Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_
 		global::WINDOW_HEIGHT / 2.0f,
 	};
 	camera.rotation = 0;
-	camera.zoom = global::PPU - 1;
+	camera.zoom = global::PPU;
 }
 Level::Level(size_t level_nr, Image image, Vector2 player_spawn)
 	: tiles(tilemap_of(image)), w(image.width), h(image.height),
@@ -72,11 +84,18 @@ Level::Level(size_t level_nr, Image image, Vector2 player_spawn)
 		global::WINDOW_HEIGHT / 2.0f,
 	};
 	camera.rotation = 0;
-	camera.zoom = global::PPU - 1;
+	camera.zoom = global::PPU;
+}
+void Level::add_texts(std::vector<LevelText> texts) {
+	for (const auto &text : texts) {
+		this->texts.push_back(text);
+		this->texts.rbegin()->pos.y += h;
+	}
 }
 Level::~Level() = default;
 Vector2 Level::get_player_spawn() const {
 	const auto offset = get_offset();
+
 	return { player_spawn.x + offset.x + 0.5f, player_spawn.y + offset.y };
 }
 
@@ -141,6 +160,10 @@ void Level::update(float dt) {
 void Level::draw() const {
 	ClearBackground(RAYWHITE);
 
+	for (const auto &text : texts) {
+		text.draw(*this, camera);
+	}
+
 	BeginMode2D(camera);
 
 	player->draw();
@@ -148,8 +171,10 @@ void Level::draw() const {
 	const auto offset = get_offset();
 	for (int y = 0; y < h; ++y) {
 		for (int x = 0; x < w; ++x) {
-			DrawRectangle(
-				x + offset.x, y + offset.y, 1, 1,
+			const Vector2 pos = { x + offset.x, y + offset.y };
+			const Vector2 size = { 1, 1 };
+			DrawRectangleV(
+				pos, size,
 				tiles[x + y*w].color
 			);
 		}
