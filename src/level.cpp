@@ -11,9 +11,6 @@
 #include "player.hpp"
 #include "scene.hpp"
 
-static constexpr float camera_play = 4;
-static constexpr float camera_follow = 0.5f;
-
 void LevelText::draw(const Level &level, const Camera2D &camera) const {
 	const Vector2 lvl_offset = level.get_offset();
 	const Vector2 world_pos = { pos.x + lvl_offset.x, pos.y + lvl_offset.y - 1 };
@@ -46,7 +43,7 @@ static std::vector<Tile> tilemap_of(Image image) {
 					goto matched_color;
 				}
 			}
-			std::cerr << "WARN: Unknown color " << color.r << ' ' << color.g << ' ' << color.b << ' ' << color.a << " in level image" << std::endl;
+			std::cerr << "WARN: Unknown color " << int(color.r) << ' ' << int(color.g) << ' ' << int(color.b) << ' ' << int(color.a) << " in level image at " << x << ", " << y << std::endl;
 			tiles.push_back(air);
 		matched_color:;
 		}
@@ -59,7 +56,7 @@ Level::Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_
 	: tiles(tilemap, tilemap + w*h), w(w), h(h),
 	player(std::make_unique<Player>()),
 	player_spawn { player_spawn.x, h + player_spawn.y },
-	level_nr(level_nr), gravity(20)
+	level_nr(level_nr), level_time(0), camera_move_time(0), gravity(20)
 {
 	player->reset(get_player_spawn());
 
@@ -74,7 +71,7 @@ Level::Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_
 Level::Level(size_t level_nr, Image image, Vector2 player_spawn)
 	: tiles(tilemap_of(image)), w(image.width), h(image.height),
 	player(std::make_unique<Player>()), player_spawn { player_spawn.x, h + player_spawn.y },
-	level_nr(level_nr), gravity(20)
+	level_nr(level_nr), level_time(0), camera_move_time(0), gravity(20)
 {
 	player->reset(get_player_spawn());
 
@@ -103,15 +100,18 @@ void Level::reset() {
 	player->reset(get_player_spawn());
 }
 void Level::full_reset() {
+	std::cerr << "Level " << level_nr << " time: " << level_time << std::endl;
 	transition.next = Levels::make_level(level_nr);
 }
 void Level::complete() {
+	std::cerr << "Level " << level_nr << " time: " << level_time << std::endl;
 	transition.next = Levels::make_level(level_nr+1);
 	if (transition.next == nullptr) {
 		transition.next = std::make_unique<MainMenu>();
 	}
 }
 void Level::exit() {
+	std::cerr << "Level " << level_nr << " time: " << level_time << std::endl;
 	transition.next = std::make_unique<MainMenu>();
 }
 
@@ -139,6 +139,8 @@ TileType Level::get_tile_type(float x, float y) const {
 }
 
 void Level::update(float dt) {
+	level_time += dt;
+
 	player->update(*this, dt);
 
 	const auto player_pos = player->get_pos();
@@ -146,13 +148,16 @@ void Level::update(float dt) {
 		player_pos.x - camera.target.x,
 		player_pos.y - camera.target.y,
 	};
-	if (std::abs(d.x) > camera_play) {
-		const float v = d.x / camera_follow;
-		camera.target.x += v * dt;
-	}
-	if (std::abs(d.y) > camera_play) {
-		const float v = d.y / camera_follow;
-		camera.target.y += v * dt;
+	const Vector2 v = { d.x / camera_follow, d.y / camera_follow };
+	camera_move_time -= dt;
+	if (d.x*d.x + d.y*d.y > camera_play*camera_play) {
+		camera_move_time = camera_min_move_time;
+
+		camera.target.x += v.x * dt;
+		camera.target.y += v.y * dt;
+	} else if (camera_move_time > 0) {
+		camera.target.x += v.x * dt;
+		camera.target.y += v.y * dt;
 	}
 
 	camera.offset = Vector2 {
@@ -160,6 +165,7 @@ void Level::update(float dt) {
 		global::WINDOW_HEIGHT / 2.0f,
 	};
 }
+#include <sstream>
 void Level::draw() const {
 	ClearBackground(RAYWHITE);
 
@@ -192,4 +198,12 @@ void Level::draw() const {
 
 	const int level_display_height = 20;
 	DrawText(level_display.c_str(), 10, 10, level_display_height, BLACK);
+
+	std::ostringstream level_time_srm;
+	level_time_srm.precision(2);
+	level_time_srm << std::fixed << level_time;
+	std::string level_time_str = level_time_srm.str();
+	const int level_time_str_height = 20;
+	const int level_time_str_width = MeasureText(level_time_str.c_str(), level_time_str_height);
+	DrawText(level_time_str.c_str(), global::WINDOW_WIDTH - 10 - level_time_str_width, 10, level_time_str_height, BLACK);
 }

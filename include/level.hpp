@@ -36,6 +36,12 @@ class Level : public Scene {
 	Camera2D camera;
 	size_t level_nr;
 	std::vector<LevelText> texts;
+	float level_time;
+	float camera_move_time;
+
+	const float camera_play = 4;
+	const float camera_follow = 0.5f;
+	const float camera_min_move_time = 0.25;
 
 public:
 	float gravity;

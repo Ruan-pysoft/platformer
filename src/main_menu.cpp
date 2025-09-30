@@ -5,41 +5,39 @@
 
 #include "globals.hpp"
 
+void CenteredButton::draw() const {
+	if (hovered) {
+		DrawRectangleRec(rect(), { 127, 195, 255, 255 });
+	} else {
+		DrawRectangleRec(rect(), { 63, 127, 255, 255 });
+	}
 
-static Vector2 play_button_centre = {
-	global::WINDOW_WIDTH / 2.0f,
-	global::WINDOW_HEIGHT / 2.0f,
-};
-static const Vector2 play_button_size = { 300, 75 };
-static Rectangle play_button_rect = {
-	play_button_centre.x - play_button_size.x / 2,
-	play_button_centre.y - play_button_size.y / 2,
-	play_button_size.x, play_button_size.y,
-};
-static int play_button_rounding = 16;
-static const char *play_button_text = "PLAY";
-static const int play_button_text_size = 42;
-static bool play_button_hovered = false;
+	static const int text_width = MeasureText(text.c_str(), text_size);
+
+	DrawText(
+		text.c_str(), centre.x - (text_width / 2.0f),
+		centre.y - (text_size / 2.0f), text_size, BLACK
+	);
+}
 
 MainMenu::MainMenu() {
-	play_button_hovered = false;
+	play = {
+		{ global::WINDOW_WIDTH / 2.0f, global::WINDOW_HEIGHT / 2.0f },
+		{ 300, 75 },
+		"PLAY", 42, false,
+	};
 }
 
 void MainMenu::update(float) {
 	const auto mouse_pos = GetMousePosition();
 
-	play_button_centre = {
+	play.centre = {
 		global::WINDOW_WIDTH / 2.0f,
 		global::WINDOW_HEIGHT / 2.0f,
 	};
-	play_button_rect = {
-		play_button_centre.x - play_button_size.x / 2,
-		play_button_centre.y - play_button_size.y / 2,
-		play_button_size.x, play_button_size.y,
-	};
 
-	play_button_hovered = CheckCollisionPointRec(mouse_pos, play_button_rect);
-	if (play_button_hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+	play.hovered = CheckCollisionPointRec(mouse_pos, play.rect());
+	if (play.hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
 		transition.next = Levels::make_level(0);
 	}
 };
@@ -52,26 +50,5 @@ void MainMenu::draw() const {
 
 	DrawText("This is a game", (global::WINDOW_WIDTH - title_width) / 2, 10, title_size, GRAY);
 
-	if (play_button_hovered) {
-		DrawRectangleRec(play_button_rect, { 195, 211, 255, 255 } );
-		DrawRectangleRounded(
-			play_button_rect, play_button_rounding, 64,
-			{ 127, 195, 255, 255 }
-		);
-	} else {
-		DrawRectangleRec(play_button_rect, { 127, 127, 195, 255 } );
-		DrawRectangleRounded(
-			play_button_rect, play_button_rounding, 64,
-			{ 63, 127, 255, 255 }
-		);
-	}
-
-	static const int play_button_text_width = MeasureText(play_button_text, play_button_text_size);
-
-	DrawText(
-		play_button_text, play_button_centre.x - (play_button_text_width / 2.0f),
-		play_button_centre.y - (play_button_text_size / 2.0f),
-		play_button_text_size,
-		BLACK
-	);
+	play.draw();
 }
