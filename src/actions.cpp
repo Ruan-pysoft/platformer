@@ -14,13 +14,14 @@ void ActionOnce::register_key(KeyboardKey key, bool on_press) const {
 		InputManager::get().registerRelease(key, [this]() { this->trigger(); });
 	}
 }
-void ActionOnce::register_cb(const std::function<void()> callback) {
-	callbacks.push_back(callback);
+ActionOnce::cb_handle_t ActionOnce::register_cb(ActionOnce::cb_t callback) {
+	callbacks[id_counter] = callback;
+	return { callbacks, id_counter++ };
 }
 
 void ActionOnce::trigger() const {
 	for (auto &cb : callbacks) {
-		cb();
+		cb.second();
 	}
 }
 
@@ -31,18 +32,21 @@ void ActionStartStop::register_key(KeyboardKey key) {
 	inp_mgr.registerPress(key, [this]() { this->press(); });
 	inp_mgr.registerRelease(key, [this]() { this->release(); });
 }
-void ActionStartStop::register_cb(const std::function<void()> on_start, const std::function<void()> on_end) {
-	callbacks.push_back(std::make_pair(on_start, on_end));
+ActionStartStop::cb_handle_t ActionStartStop::register_cb(
+	ActionStartStop::cb_t on_start, ActionStartStop::cb_t on_end
+) {
+	callbacks[id_counter] = std::make_pair(on_start, on_end);
+	return { callbacks, id_counter++ };
 }
 
 void ActionStartStop::press() {
 	for (auto &cb : callbacks) {
-		cb.first();
+		cb.second.first();
 	}
 }
 void ActionStartStop::release() {
 	for (auto &cb : callbacks) {
-		cb.second();
+		cb.second.second();
 	}
 }
 
@@ -50,13 +54,14 @@ ActionSustain::ActionSustain() { }
 void ActionSustain::register_key(KeyboardKey key) const {
 	InputManager::get().registerSustain(key, [this](float dt) { this->trigger(dt); });
 }
-void ActionSustain::register_cb(const std::function<void(float dt)> callback) {
-	callbacks.push_back(callback);
+ActionSustain::cb_handle_t ActionSustain::register_cb(ActionSustain::cb_t callback) {
+	callbacks[id_counter] = callback;
+	return { callbacks, id_counter++ };
 }
 
 void ActionSustain::trigger(float dt) const {
 	for (auto &cb : callbacks) {
-		cb(dt);
+		cb.second(dt);
 	}
 }
 

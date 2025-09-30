@@ -21,7 +21,7 @@ class Player;
 class Level : public Scene {
 	const std::vector<Tile> tiles;
 	int w, h;
-	Player &player;
+	std::unique_ptr<Player> player;
 	Vector2 player_spawn;
 	Camera2D camera;
 	size_t level_nr;
@@ -32,6 +32,7 @@ public:
 
 	Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_spawn);
 	Level(size_t level_nr, Image image, Vector2 player_spawn);
+	~Level();
 	Vector2 get_player_spawn() const;
 
 	void reset();

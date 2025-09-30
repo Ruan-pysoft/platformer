@@ -45,11 +45,11 @@ static std::vector<Tile> tilemap_of(Image image) {
 
 Level::Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_spawn)
 	: tiles(tilemap, tilemap + w*h), w(w), h(h),
-	player(Player::get_player()),
+	player(std::make_unique<Player>()),
 	player_spawn { player_spawn.x, h + player_spawn.y },
 	level_nr(level_nr), gravity(20)
 {
-	player.reset(get_player_spawn());
+	player->reset(get_player_spawn());
 
 	camera.target = get_player_spawn();
 	camera.offset = {
@@ -61,10 +61,10 @@ Level::Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_
 }
 Level::Level(size_t level_nr, Image image, Vector2 player_spawn)
 	: tiles(tilemap_of(image)), w(image.width), h(image.height),
-	player(Player::get_player()), player_spawn { player_spawn.x, h + player_spawn.y },
+	player(std::make_unique<Player>()), player_spawn { player_spawn.x, h + player_spawn.y },
 	level_nr(level_nr), gravity(20)
 {
-	player.reset(get_player_spawn());
+	player->reset(get_player_spawn());
 
 	camera.target = get_player_spawn();
 	camera.offset = {
@@ -74,13 +74,14 @@ Level::Level(size_t level_nr, Image image, Vector2 player_spawn)
 	camera.rotation = 0;
 	camera.zoom = global::PPU - 1;
 }
+Level::~Level() = default;
 Vector2 Level::get_player_spawn() const {
 	const auto offset = get_offset();
 	return { player_spawn.x + offset.x + 0.5f, player_spawn.y + offset.y };
 }
 
 void Level::reset() {
-	player.reset(get_player_spawn());
+	player->reset(get_player_spawn());
 }
 void Level::complete() {
 	transition.next = Levels::make_level(level_nr+1);
@@ -116,9 +117,9 @@ TileType Level::get_tile_type(float x, float y) const {
 }
 
 void Level::update(float dt) {
-	player.update(*this, dt);
+	player->update(*this, dt);
 
-	const auto player_pos = player.get_pos();
+	const auto player_pos = player->get_pos();
 	const Vector2 d = {
 		player_pos.x - camera.target.x,
 		player_pos.y - camera.target.y,
@@ -142,7 +143,7 @@ void Level::draw() const {
 
 	BeginMode2D(camera);
 
-	player.draw();
+	player->draw();
 
 	const auto offset = get_offset();
 	for (int y = 0; y < h; ++y) {

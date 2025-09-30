@@ -1,43 +1,39 @@
 #include "player.hpp"
 
 #include <algorithm>
-/*#include <iostream>*/
+//#include <iostream>
 
-#include "actions.hpp"
 #include "level.hpp"
 
-static const float jump_vel = 12;
-static const float walk_acc = 16;
-static const float walk_dec = 32;
-static const float walk_speed = 20;
-static const float friction = 12;
-static bool try_jump = false;
-static bool try_djump = false;
-static bool walk_left = false;
-static bool walk_right = false;
-static bool walking = false;
-static bool has_djumped = false;
-static bool was_killed = false;
-static bool achieved_goal = false;
-static bool flying = false;
+inline constexpr MotionInputs operator|(MotionInputs a, MotionInputs b) {
+	return static_cast<MotionInputs>(
+		static_cast<uint8_t>(a) | static_cast<uint8_t>(b)
+	);
+}
+inline constexpr MotionInputs &operator|=(MotionInputs &a, MotionInputs b) {
+	return a = a | b;
+}
+inline constexpr bool test_input(MotionInputs mask, MotionInputs input) {
+	return (static_cast<uint8_t>(mask) & static_cast<uint8_t>(input)) != 0;
+}
 
 static constexpr float EPS = 1.0f / 1024;
 
-Player::Player() : pos { 0, 0 }, vel { 0, 0 } {
-	Action::Jump.register_cb([](float) {
-		try_jump = true;
+Player::Player()  {
+	jump_action = Action::Jump.register_cb([this](float) {
+		inputs |= MotionInputs::Jump;
 	});
-	Action::DoubleJump.register_cb([]() {
-		try_djump = true;
+	double_jump_action = Action::DoubleJump.register_cb([this]() {
+		inputs |= MotionInputs::DoubleJump;
 	});
-	Action::Left.register_cb([](float) {
-		walk_left = true;
+	walk_left_action = Action::Left.register_cb([this](float) {
+		inputs |= MotionInputs::WalkLeft;
 	});
-	Action::Right.register_cb([](float) {
-		walk_right = true;
+	walk_right_action = Action::Right.register_cb([this](float) {
+		inputs |= MotionInputs::WalkRight;
 	});
-	Action::Fly.register_cb([](float) {
-		flying = true;
+	fly_action = Action::Fly.register_cb([this](float) {
+		inputs |= MotionInputs::Fly;
 	});
 }
 
@@ -69,6 +65,9 @@ bool Player::on_ground(Level &level) {
 	}
 
 	return false;
+}
+bool Player::test_input(MotionInputs input) {
+	return ::test_input(inputs, input);
 }
 
 void Player::resolve_collisions_x(Level &level) {
@@ -121,10 +120,10 @@ void Player::resolve_collisions_x(Level &level) {
 					}
 				} break;
 				case TileType::Danger: {
-					was_killed = true;
+					killed = true;
 				} break;
 				case TileType::Goal: {
-					achieved_goal = true;
+					level_completed = true;
 				} break;
 				case TileType::Empty: break;
 			}
@@ -181,21 +180,15 @@ void Player::resolve_collisions_y(Level &level) {
 					}
 				} break;
 				case TileType::Danger: {
-					was_killed = true;
+					killed = true;
 				} break;
 				case TileType::Goal: {
-					achieved_goal = true;
+					level_completed = true;
 				} break;
 				case TileType::Empty: break;
 			}
 		}
 	}
-}
-
-Player &Player::get_player() {
-	static Player instance{};
-
-	return instance;
 }
 
 Vector2 Player::get_pos() const {
@@ -204,74 +197,68 @@ Vector2 Player::get_pos() const {
 void Player::reset(Vector2 pos) {
 	this->pos = pos;
 	this->vel = { 0, 0 };
+	this->inputs = MotionInputs::None;
+	this->jumpstate = JumpState::DoubleJumped;
 
-	try_jump = false;
-	try_djump = false;
-	walk_left = false;
-	walk_right = false;
-	walking = false;
-	has_djumped = false;
-	was_killed = false;
-	achieved_goal = false;
-	flying = false;
+	killed = false;
+	level_completed = false;
 }
 
 void Player::update(Level &level, float dt) {
-	const bool grounded = on_ground(level);
-
-	if (was_killed) {
+	if (killed) {
 		level.reset(); return;
 	}
-	if (achieved_goal) {
+	if (level_completed) {
 		level.complete(); return;
 	}
+
+	if (on_ground(level)) jumpstate = JumpState::Grounded;
+	else if (jumpstate == JumpState::Grounded) jumpstate = JumpState::Airborne;
 
 	/*if (try_jump) std::cerr << "Trying to jump!" << std::endl;
 	if (try_djump) std::cerr << "Trying to double jump!" << std::endl;
 	if (walk_left) std::cerr << "Walking left!" << std::endl;
 	if (walk_right) std::cerr << "Walking right!" << std::endl;*/
 
-	if (try_jump && grounded) {
+	if (test_input(MotionInputs::Jump) && jumpstate == JumpState::Grounded) {
 		vel.y = -jump_vel;
-	}
-	if (try_djump && !grounded && !has_djumped) {
+		jumpstate = JumpState::Airborne;
+	} else if (test_input(MotionInputs::DoubleJump) && jumpstate == JumpState::Airborne) {
 		vel.y = -jump_vel;
-		has_djumped = true;
+		jumpstate = JumpState::DoubleJumped;
 	}
-	if (walk_left) {
-		walking = true;
+	if (test_input(MotionInputs::WalkLeft)) {
 		if (vel.x > 0) {
 			vel.x -= walk_dec * dt;
-		} else if (vel.x > -walk_speed) {
+		} else if (vel.x > -walk_vel) {
 			vel.x -= walk_acc * dt;
-			if (vel.x < -walk_speed) vel.x = -walk_speed;
+			if (vel.x < -walk_vel) vel.x = -walk_vel;
 		}
 	}
-	if (walk_right) {
-		walking = true;
+	if (test_input(MotionInputs::WalkRight)) {
 		if (vel.x < 0) {
 			vel.x += walk_dec * dt;
-		} else if (vel.x < walk_speed) {
+		} else if (vel.x < walk_vel) {
 			vel.x += walk_acc * dt;
-			if (vel.x > walk_speed) vel.x = walk_speed;
+			if (vel.x > walk_vel) vel.x = walk_vel;
 		}
 	}
-	if (flying) {
+	if (test_input(MotionInputs::Fly)) {
 		vel.y = std::min(vel.y, -jump_vel / 2.0f);
 	}
 
-	if (on_ground(level)) {
-		has_djumped = false;
-
+	if (jumpstate == JumpState::Grounded) {
 		vel.y = std::min(0.f, vel.y);
 
-		if (!walking) {
+		if (!test_input(MotionInputs::WalkLeft | MotionInputs::WalkRight)) {
 			if (friction * dt >= std::abs(vel.x)) vel.x = 0;
 			else if (vel.x > 0) vel.x -= friction * dt;
 			else vel.x += friction * dt;
 		}
 	} else {
-		if (!flying) vel.y += level.gravity * dt;
+		if (!test_input(MotionInputs::Fly)) {
+			vel.y += level.gravity * dt;
+		}
 	}
 
 	if (std::abs(vel.y) <= std::abs(vel.x)) {
@@ -288,15 +275,10 @@ void Player::update(Level &level, float dt) {
 		resolve_collisions_x(level);
 	}
 
-	walking = false;
-	try_jump = false;
-	try_djump = false;
-	walk_left = false;
-	walk_right = false;
-	flying = false;
+	inputs = MotionInputs::None;
 
-	if (was_killed) level.reset();
-	if (achieved_goal) level.complete();
+	if (killed) level.reset();
+	if (level_completed) level.complete();
 }
 void Player::draw() const {
 	DrawRectangleV(
