@@ -131,6 +131,11 @@ void Level::update(float dt) {
 		const float v = d.y / camera_follow;
 		camera.target.y += v * dt;
 	}
+
+	camera.offset = Vector2 {
+		global::WINDOW_WIDTH / 2.0f,
+		global::WINDOW_HEIGHT / 2.0f,
+	};
 }
 void Level::draw() const {
 	ClearBackground(RAYWHITE);

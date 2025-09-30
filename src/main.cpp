@@ -19,6 +19,8 @@ int main() {
 		map.action.register_key(map.key);
 	}
 
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+
 	InitWindow(
 		global::WINDOW_WIDTH, global::WINDOW_HEIGHT,
 		"Hello Window"
@@ -29,6 +31,8 @@ int main() {
 	SetTargetFPS(global::FPS);
 
 	while (!WindowShouldClose()) {
+		global::WINDOW_WIDTH = GetScreenWidth();
+		global::WINDOW_HEIGHT = GetScreenHeight();
 		inp_mgr.handleInputs();
 		game.update();
 		game.draw();
@@ -46,8 +50,8 @@ namespace global {
 
 const float SCALE = 1.0f;
 const int FPS = 60;
-const int WINDOW_WIDTH = 800 * SCALE;
-const int WINDOW_HEIGHT = 600 * SCALE;
+int WINDOW_WIDTH = 800 * SCALE;
+int WINDOW_HEIGHT = 600 * SCALE;
 
 const int PPU = 20 * SCALE;
 

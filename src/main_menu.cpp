@@ -5,12 +5,13 @@
 
 #include "globals.hpp"
 
-static const Vector2 play_button_centre = {
+
+static Vector2 play_button_centre = {
 	global::WINDOW_WIDTH / 2.0f,
 	global::WINDOW_HEIGHT / 2.0f,
 };
 static const Vector2 play_button_size = { 300, 75 };
-static const Rectangle play_button_rect = {
+static Rectangle play_button_rect = {
 	play_button_centre.x - play_button_size.x / 2,
 	play_button_centre.y - play_button_size.y / 2,
 	play_button_size.x, play_button_size.y,
@@ -26,6 +27,16 @@ MainMenu::MainMenu() {
 
 void MainMenu::update(float) {
 	const auto mouse_pos = GetMousePosition();
+
+	play_button_centre = {
+		global::WINDOW_WIDTH / 2.0f,
+		global::WINDOW_HEIGHT / 2.0f,
+	};
+	play_button_rect = {
+		play_button_centre.x - play_button_size.x / 2,
+		play_button_centre.y - play_button_size.y / 2,
+		play_button_size.x, play_button_size.y,
+	};
 
 	play_button_hovered = CheckCollisionPointRec(mouse_pos, play_button_rect);
 	if (play_button_hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {

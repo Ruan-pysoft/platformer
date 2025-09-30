@@ -21,5 +21,4 @@
  - respawn & level reset keys (perhaps level reset through menu?)
  - audio & art
  - ? scene transitions (fade...?)
- - start window fullscreen
  - add config file & parsing
