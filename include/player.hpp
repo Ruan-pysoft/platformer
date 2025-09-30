@@ -36,11 +36,12 @@ class Player {
 	ActionSustain::cb_handle_t fly_action;
 
 	static constexpr Vector2 size = Vector2 { 1.0f, 2.0f };
-	static constexpr float jump_vel = 12;
+	static constexpr float jump_vel = 13;
 	static constexpr float walk_acc = 16;
 	static constexpr float walk_dec = 32;
 	static constexpr float walk_vel = 20;
 	static constexpr float friction = 12;
+	static constexpr float coyote_time = 1.0f / 16;
 
 	bool on_ground(Level &level);
 	bool test_input(MotionInputs input);

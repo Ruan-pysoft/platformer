@@ -205,6 +205,8 @@ void Player::reset(Vector2 pos) {
 }
 
 void Player::update(Level &level, float dt) {
+	static float coyote_time_left = 0;
+
 	if (killed) {
 		level.reset(); return;
 	}
@@ -212,8 +214,13 @@ void Player::update(Level &level, float dt) {
 		level.complete(); return;
 	}
 
-	if (on_ground(level)) jumpstate = JumpState::Grounded;
-	else if (jumpstate == JumpState::Grounded) jumpstate = JumpState::Airborne;
+	if (on_ground(level)) {
+		jumpstate = JumpState::Grounded;
+		coyote_time_left = coyote_time;
+	} else if (jumpstate == JumpState::Grounded) {
+		coyote_time_left -= dt;
+		if (coyote_time_left <= 0) jumpstate = JumpState::Airborne;
+	}
 
 	/*if (try_jump) std::cerr << "Trying to jump!" << std::endl;
 	if (try_djump) std::cerr << "Trying to double jump!" << std::endl;
