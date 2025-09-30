@@ -49,6 +49,7 @@ public:
 	Vector2 get_player_spawn() const;
 
 	void reset();
+	void full_reset();
 	void complete();
 	void exit();
 

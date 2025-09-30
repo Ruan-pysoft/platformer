@@ -73,4 +73,6 @@ ActionSustain Left{};
 ActionSustain Right{};
 ActionSustain Fly{};
 
+ActionOnce Reset{};
+
 }

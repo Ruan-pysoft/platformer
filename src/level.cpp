@@ -102,6 +102,9 @@ Vector2 Level::get_player_spawn() const {
 void Level::reset() {
 	player->reset(get_player_spawn());
 }
+void Level::full_reset() {
+	transition.next = Levels::make_level(level_nr);
+}
 void Level::complete() {
 	transition.next = Levels::make_level(level_nr+1);
 	if (transition.next == nullptr) {
