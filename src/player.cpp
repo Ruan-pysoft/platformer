@@ -203,6 +203,7 @@ Vector2 Player::get_pos() const {
 }
 void Player::reset(Vector2 pos) {
 	this->pos = pos;
+	this->vel = { 0, 0 };
 
 	try_jump = false;
 	try_djump = false;
