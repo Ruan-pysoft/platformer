@@ -38,6 +38,10 @@ int main(int argc, char **argv) {
 	if (!cmd_run(&cmd)) return 1;
 
 	cmd_append(&cmd, output_path);
+	// forward args to configured build script
+	for (int i = 0; i < argc; ++i) {
+		cmd_append(&cmd, argv[i]);
+	}
 	if (!cmd_run(&cmd)) return 1;
 
 	return 0;

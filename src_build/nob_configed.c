@@ -8,10 +8,18 @@
 
 bool build_raylib(void);
 bool build_game(void);
+bool run_game(void);
 
 int main(int argc, char **argv) {
 	if (!build_raylib()) return 1;
 	if (!build_game()) return 1;
+
+	bool run = false;
+	for (int i = 0; i < argc; ++i) {
+		if (strcmp(argv[i], "run") == 0) run = true;
+	}
+
+	if (run && !run_game()) return 1;
 }
 
 #include "dirs.h"
@@ -255,6 +263,17 @@ bool build_game(void) {
 		if (!cmd_run(&cmd)) return false;
 #endif
 	} else nob_log(INFO, "Game executable is up-to-date, not rebuilding!");
+
+	return true;
+}
+
+/* RUNNING THE COMPILED GAME EXECUTABLE */
+
+bool run_game(void) {
+	Cmd cmd = {0};
+
+	cmd_append(&cmd, outfile);
+	if (!cmd_run(&cmd)) return false;
 
 	return true;
 }
