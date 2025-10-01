@@ -36,6 +36,7 @@ Player::Player()  {
 		inputs |= MotionInputs::Fly;
 	});
 	suicide_action = Action::Suicide.register_cb([this]() {
+		if (!killed) ++deaths;
 		killed = true;
 	});
 }
@@ -71,6 +72,9 @@ bool Player::on_ground(Level &level) {
 }
 bool Player::test_input(MotionInputs input) {
 	return ::test_input(inputs, input);
+}
+int Player::get_deaths() const {
+	return deaths;
 }
 
 void Player::resolve_collisions_x(Level &level) {
@@ -123,6 +127,7 @@ void Player::resolve_collisions_x(Level &level) {
 					}
 				} break;
 				case TileType::Danger: {
+					if (!killed) ++deaths;
 					killed = true;
 				} break;
 				case TileType::Goal: {
@@ -183,6 +188,7 @@ void Player::resolve_collisions_y(Level &level) {
 					}
 				} break;
 				case TileType::Danger: {
+					if (!killed) ++deaths;
 					killed = true;
 				} break;
 				case TileType::Goal: {

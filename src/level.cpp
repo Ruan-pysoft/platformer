@@ -1,6 +1,7 @@
 #include "level.hpp"
 
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "raylib.h"
@@ -25,64 +26,54 @@ void LevelText::draw(const Level &level, const Camera2D &camera) const {
 	DrawTextEx(GetFontDefault(), text.c_str(), scr_pos, font_size, spacing, color);
 }
 
-Level::PauseScreen::PauseScreen(Level &level)
-: level(level), unpause {
-	[this]() {
-		this->level.paused = false;
-	},
-	GuiBox::floating_x({ -137.5f, 100 }, { 250, 75 }), "RESUME"
-  }, main_menu {
-	[this]() {
-		this->level.transition.next = std::make_unique<MainMenu>();
-	},
-	GuiBox::floating_x({ 137.5f, 100 }, { 250, 75 }), "MAIN MENU"
-  }, prev_level {
-	[this]() {
-		this->level.transition.next = Levels::make_level(this->level.level_nr-1);
-	},
-	GuiBox::floating_x({ 0, 200 }, { 525, 75 }), "PREVIOUS LEVEL"
-  }, restart {
-	[this]() {
-		this->level.full_reset();
-	},
-	GuiBox::floating_x({ 0, 300 }, { 525, 75 }), "RESTART LEVEL"
-  }
-{
-	pause_text = Text { "", 50, { 0, 12.5 }, true, BLACK };
-	pause_text.text += "Paused - Level ";
-	pause_text.text += std::to_string(level.level_nr + 1);
+Level::Overlay::Overlay(Level &level) : level(level), text{}, buttons{} { }
 
-	if (this->level.level_nr == 0) {
-		prev_level.color_unfocus = LIGHTGRAY;
+Level::Overlay &Level::Overlay::add_text(Text text, bool centered) {
+	this->text.push_back(std::make_pair(text, centered));
+
+	return *this;
+}
+Level::Overlay &Level::Overlay::add_button(Button button) {
+	buttons.push_back(button);
+
+	return *this;
+}
+Text *Level::Overlay::get_text(size_t ix) {
+	if (ix > text.size()) return nullptr;
+	return &text[ix].first;
+}
+Button *Level::Overlay::get_button(size_t ix) {
+	if (ix > buttons.size()) return nullptr;
+	return &buttons[ix];
+}
+
+void Level::Overlay::update(float dt) {
+	for (auto &e : text) {
+		if (e.second) e.first.pos.x = global::WINDOW_WIDTH / 2.0f;
+	}
+	for (auto &e : buttons) {
+		e.update(dt);
 	}
 }
-
-void Level::PauseScreen::update(float dt) {
-	pause_text.pos.x = global::WINDOW_WIDTH / 2.0f;
-
-	unpause.update(dt);
-	main_menu.update(dt);
-	if (this->level.level_nr) prev_level.update(dt);
-	restart.update(dt);
-}
-void Level::PauseScreen::draw() const {
+void Level::Overlay::draw() const {
 	DrawRectangle(
 		0, 0, global::WINDOW_WIDTH, global::WINDOW_HEIGHT,
 		{ 195, 195, 255, 127 }
 	);
 
-	pause_text.draw();
-
-	unpause.draw();
-	main_menu.draw();
-	prev_level.draw();
-	restart.draw();
+	for (auto &e : text) {
+		e.first.draw();
+	}
+	for (auto &e : buttons) {
+		e.draw();
+	}
 }
 
 Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 player_spawn)
 : tiles(tiles), w(w), h(h), player(std::make_unique<Player>()),
   player_spawn { player_spawn.x, h + player_spawn.y }, level_nr(level_nr),
-  level_time(0), camera_move_time(0), paused(false), pause_screen(*this), gravity(20)
+  level_time(0), camera_move_time(0), state(LevelState::Active),
+  pause_overlay(*this), win_overlay(*this), gravity(20)
 {
 	player->reset(get_player_spawn());
 
@@ -94,7 +85,94 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 pla
 	camera.rotation = 0;
 	camera.zoom = global::PPU;
 
-	pause_action = Action::Pause.register_cb([this]() { paused = !paused; });
+	pause_action = Action::Pause.register_cb([this]() {
+		if (state == LevelState::Paused) {
+			state = LevelState::Active;
+		} else if (state == LevelState::Active) {
+			state = LevelState::Paused;
+		}
+	});
+
+	Text pause_text = { "", 50, { 0, 12.5 }, true, BLACK };
+	pause_text.text += "Paused - Level ";
+	pause_text.text += std::to_string(level_nr + 1);
+	pause_overlay.add_text(pause_text, true);
+	pause_overlay.add_button({
+		[this]() {
+			state = LevelState::Active;
+		},
+		GuiBox::floating_x({ -137.5f, 100 }, { 250, 75 }), "RESUME"
+	});
+	pause_overlay.add_button({
+		[this]() {
+			transition.next = std::make_unique<MainMenu>();
+		},
+		GuiBox::floating_x({ 137.5f, 100 }, { 250, 75 }), "MAIN MENU"
+	});
+	const auto pause_prev_box = GuiBox::floating_x({ 0, 200 }, { 525, 75 });
+	const auto pause_prev_txt = "PREVIOUS LEVEL";
+	if (level_nr == 0) {
+		pause_overlay.add_button({
+			[]() {}, pause_prev_box, pause_prev_txt,
+			Button::DEFAULT_TEXT_SIZE, LIGHTGRAY, LIGHTGRAY,
+			Button::DEFAULT_TEXT_COLOR
+		});
+	} else {
+		pause_overlay.add_button({
+			[this]() {
+				transition.next = Levels::make_level(this->level_nr - 1);
+			},
+			pause_prev_box, pause_prev_txt
+		});
+	}
+	pause_overlay.add_button({
+		[this]() {
+			full_reset();
+		},
+		GuiBox::floating_x({ 0, 300 }, { 525, 75 }), "RESTART LEVEL"
+	});
+
+	win_overlay.add_text({ "You won!", 50, { 0, 12.5 }, true, BLACK }, true);
+	win_overlay.add_text({ "", 24, { 0, 75 }, true, BLACK }, true);
+	win_overlay.add_text({ "", 24, { 0, 100 }, true, BLACK }, true);
+
+	win_overlay.add_button({
+		[this]() {
+			transition.next = Levels::make_level(this->level_nr+1);
+			if (transition.next == nullptr) {
+				transition.next = std::make_unique<MainMenu>();
+			}
+		},
+		GuiBox::floating_x({ -137.5f, 150 }, { 250, 75 }), "PROCEED"
+	});
+	win_overlay.add_button({
+		[this]() {
+			exit();
+		},
+		GuiBox::floating_x({ 137.5f, 150 }, { 250, 75 }), "MAIN MENU"
+	});
+	const auto win_prev_box = GuiBox::floating_x({ 0, 250 }, { 525, 75 });
+	const auto win_prev_txt = "PREVIOUS LEVEL";
+	if (level_nr == 0) {
+		win_overlay.add_button({
+			[]() {}, win_prev_box, win_prev_txt,
+			Button::DEFAULT_TEXT_SIZE, LIGHTGRAY, LIGHTGRAY,
+			Button::DEFAULT_TEXT_COLOR
+		});
+	} else {
+		win_overlay.add_button({
+			[this]() {
+				transition.next = Levels::make_level(this->level_nr - 1);
+			},
+			win_prev_box, win_prev_txt
+		});
+	}
+	win_overlay.add_button({
+		[this]() {
+			full_reset();
+		},
+		GuiBox::floating_x({ 0, 350 }, { 525, 75 }), "RESTART LEVEL"
+	});
 }
 
 Vector2 Level::get_offset() const {
@@ -155,11 +233,7 @@ void Level::full_reset() {
 	transition.next = Levels::make_level(level_nr);
 }
 void Level::complete() {
-	std::cerr << "Level " << level_nr << " time: " << level_time << std::endl;
-	transition.next = Levels::make_level(level_nr+1);
-	if (transition.next == nullptr) {
-		transition.next = std::make_unique<MainMenu>();
-	}
+	state = LevelState::WinScreen;
 }
 void Level::exit() {
 	std::cerr << "Level " << level_nr << " time: " << level_time << std::endl;
@@ -190,11 +264,28 @@ TileType Level::get_tile_type(float x, float y) const {
 }
 
 void Level::update(float dt) {
-	if (paused) {
-		pause_screen.update(dt);
+	switch (state) {
+		case LevelState::Paused: {
+			pause_overlay.update(dt);
+		} break;
+		case LevelState::WinScreen: {
+			Text *time_text = win_overlay.get_text(1);
+			if (time_text->text.size() == 0) {
+				time_text->text = "Completion time: ";
+				time_text->text += std::to_string(level_time);
+			}
+			Text *deaths_text = win_overlay.get_text(2);
+			if (deaths_text->text.size() == 0) {
+				deaths_text->text = "Total deaths: ";
+				deaths_text->text += std::to_string(player->get_deaths());
+			}
 
-		return;
+			win_overlay.update(dt);
+		} break;
+		case LevelState::Active: break;
 	}
+
+	if (state != LevelState::Active) return;
 
 	level_time += dt;
 
@@ -264,7 +355,13 @@ void Level::draw() const {
 	const int level_time_str_width = MeasureText(level_time_str.c_str(), level_time_str_height);
 	DrawText(level_time_str.c_str(), global::WINDOW_WIDTH - 10 - level_time_str_width, 10, level_time_str_height, BLACK);
 
-	if (paused) {
-		pause_screen.draw();
+	switch (state) {
+		case LevelState::Paused: {
+			pause_overlay.draw();
+		} break;
+		case LevelState::WinScreen: {
+			win_overlay.draw();
+		} break;
+		case LevelState::Active: break;
 	}
 }

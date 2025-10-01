@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "raylib.h"
@@ -29,18 +30,23 @@ struct LevelText {
 	void draw(const Level &level, const Camera2D &camera) const;
 };
 
+enum class LevelState { Active, Paused, WinScreen };
+
 class Player;
 class Level : public Scene {
-	class PauseScreen {
+	class Overlay {
 		Level &level;
 
-		Text pause_text;
-		Button unpause;
-		Button main_menu;
-		Button prev_level;
-		Button restart;
+		std::vector<std::pair<Text, bool>> text;
+		std::vector<Button> buttons;
 	public:
-		PauseScreen(Level &level);
+		Overlay(Level &level);
+
+		Overlay &add_text(Text text, bool centered);
+		Overlay &add_button(Button button);
+
+		Text *get_text(size_t ix);
+		Button *get_button(size_t ix);
 
 		void update(float dt);
 		void draw() const;
@@ -55,9 +61,10 @@ class Level : public Scene {
 	std::vector<LevelText> texts;
 	float level_time;
 	float camera_move_time;
-	bool paused;
+	LevelState state;
 	ActionOnce::cb_handle_t pause_action;
-	PauseScreen pause_screen;
+	Overlay pause_overlay;
+	Overlay win_overlay;
 
 	const float camera_play = 4;
 	const float camera_follow = 0.5f;

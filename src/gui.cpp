@@ -25,7 +25,13 @@ Button::Button(callback_t on_click, GuiBox box, std::string text,
 		// the default font does not exist yet
 		return;
 	}
-	update(0);
+
+	// from raylib/src/rtext.c:1195
+	const float spacing = text_size / 10.0f;
+
+	text_width = MeasureTextEx(
+		GetFontDefault(), text.c_str(), text_size, spacing
+	).x;
 }
 
 void Button::update(float) {

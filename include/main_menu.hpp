@@ -5,6 +5,7 @@
 
 class MainMenu : public Scene {
 	Button play;
+	Button quit;
 	Text title;
 public:
 	MainMenu();

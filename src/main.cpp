@@ -31,7 +31,7 @@ int main() {
 
 	SetTargetFPS(global::FPS);
 
-	while (!WindowShouldClose()) {
+	while (!WindowShouldClose() && !global::quit) {
 		global::WINDOW_WIDTH = GetScreenWidth();
 		global::WINDOW_HEIGHT = GetScreenHeight();
 		inp_mgr.handleInputs();
@@ -53,6 +53,7 @@ const float SCALE = 1.0f;
 const int FPS = 60;
 int WINDOW_WIDTH = 800 * SCALE;
 int WINDOW_HEIGHT = 600 * SCALE;
+bool quit = false;
 
 const int PPU = 20 * SCALE;
 

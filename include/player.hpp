@@ -27,6 +27,7 @@ class Player {
 	Vector2 vel = { 0, 0 };
 	MotionInputs inputs = MotionInputs::None;
 	JumpState jumpstate = JumpState::DoubleJumped;
+	int deaths = 0;
 	bool killed = false;
 	bool level_completed = false;
 	ActionSustain::cb_handle_t jump_action;
@@ -54,6 +55,7 @@ public:
 
 	Vector2 get_pos() const;
 	void reset(Vector2 pos);
+	int get_deaths() const;
 
 	void update(Level &level, float dt);
 	void draw() const;
