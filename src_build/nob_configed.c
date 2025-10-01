@@ -5,9 +5,16 @@
 #define NOB_EXPERIMENTAL_DELETE_OLD
 #define NOB_WARN_DEPRECATED
 #include "nob.h"
-#include "dirs.h"
 
+#include "dirs.h"
+#include "config.h"
+
+#ifdef WINDOWS
+const char outfile[] = BUILD_DIR"game.exe";
+#else
 const char outfile[] = BUILD_DIR"game";
+#endif
+const char config_header[] = BUILD_DIR"config.h";
 
 #define HPP(header) const char *const header ## _hpp = INCLUDE_DIR #header ".hpp"
 
@@ -76,20 +83,38 @@ struct Target {
 };
 
 bool check_needs_rebuild(const struct Target *target) {
+	if (needs_rebuild1(target->obj, config_header)) return true;
 	if (needs_rebuild1(target->obj, target->src)) return true;
 	return needs_rebuild(
 		target->obj, (const char**)target->deps, target->n_deps
 	);
 }
 
+#ifdef WINDOWS
+const char *compiler = "x86_64-w64-mingw32-g++";
+#else
+const char *compiler = "g++";
+#endif
+
 const char *cpp_flags[] = {
+#ifdef RELEASE
+	"-O2",
+#else
 	"-g",
+#endif
 	"-Wall", "-Wextra",
 	"-I./include", "-I./raylib/src",
 };
 const char *ld_flags[] = {
 	"-O2",
-	"-L./raylib/src", "-lraylib", "-lm",
+#ifdef WINDOWS
+	"-L./raylib-5.5_win64_mingw-w64/lib",
+	"-lraylib", "-lm", "-lgdi32", "-lwinmm",
+	"-static",
+#else
+	"-L./raylib/src",
+	"-lraylib", "-lm",
+#endif
 };
 
 void cmd_push(Cmd *cmd, const char **args, size_t args_len) {
@@ -105,7 +130,7 @@ int main(int argc, char **argv) {
 	for (size_t i = 0; i < ARRAY_LEN(targets); ++i) {
 		if (!check_needs_rebuild(&targets[i])) continue;
 
-		cmd_append(&cmd, "g++", "-c");
+		cmd_append(&cmd, compiler, "-c");
 		cmd_push(&cmd, cpp_flags, ARRAY_LEN(cpp_flags));
 		cmd_append(&cmd, "-o", targets[i].obj);
 		cmd_append(&cmd, targets[i].src);
@@ -115,9 +140,9 @@ int main(int argc, char **argv) {
 
 	if (!procs_flush(&procs)) return 1;
 
-	bool needs_rebuild = false;
+	bool needs_rebuild = needs_rebuild1(outfile, config_header);
 
-	cmd_append(&cmd, "g++");
+	cmd_append(&cmd, compiler);
 	cmd_append(&cmd, "-o", outfile);
 	for (size_t i = 0; i < ARRAY_LEN(targets); ++i) {
 		cmd_append(&cmd, targets[i].obj);
@@ -130,5 +155,10 @@ int main(int argc, char **argv) {
 
 	if (needs_rebuild) {
 		if (!cmd_run(&cmd)) return 1;
+
+#ifdef RELEASE
+		cmd_append(&cmd, "strip", outfile);
+		if (!cmd_run(&cmd)) return 1;
+#endif
 	} else nob_log(INFO, "Game executable is up-to-date, not rebuilding!");
 }
