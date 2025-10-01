@@ -17,7 +17,7 @@ CFLAGS_EXTERNAL="$CFLAGS_EXTERNAL -I./include -I./raylib/src" # -I./raygui/src"
 
 LD="g++"
 LDFLAGS="-O2"
-LDFLAGS="$LDFLAGS -L./raylib/src -lraylib -lm -lGL"
+LDFLAGS="$LDFLAGS -L./raylib/src -lraylib -lm"
 
 # create the build directory
 
@@ -47,6 +47,8 @@ $CC $CFLAGS -c $SRCDIR/levels_list.cpp -o $BUILDDIR/levels_list.o
 OBJS="$OBJS $BUILDDIR/levels_list.o"
 $CC $CFLAGS -c $SRCDIR/gui.cpp -o $BUILDDIR/gui.o
 OBJS="$OBJS $BUILDDIR/gui.o"
+$CC $CFLAGS -c $SRCDIR/level_select.cpp -o $BUILDDIR/level_select.o
+OBJS="$OBJS $BUILDDIR/level_select.o"
 
 # link the kernel
 

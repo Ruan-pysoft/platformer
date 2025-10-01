@@ -17,7 +17,7 @@ CFLAGS_EXTERNAL="$CFLAGS_EXTERNAL -I./include -I./raylib/src" # -I./raygui/src"
 
 LD="x86_64-w64-mingw32-g++"
 LDFLAGS="-O2"
-LDFLAGS="$LDFLAGS -L./raylib-5.5_win64_mingw-w64/lib -lraylib -lm -lgdi32 -lwinmm -lGL"
+LDFLAGS="$LDFLAGS -L./raylib-5.5_win64_mingw-w64/lib -lraylib -lm -lgdi32 -lwinmm"
 LDFLAGS="$LDFLAGS -static-libgcc -static-libstdc++"
 LDFLAGS="$LDFLAGS -static"
 
@@ -49,6 +49,8 @@ $CC $CFLAGS -c $SRCDIR/levels_list.cpp -o $BUILDDIR/levels_list.o
 OBJS="$OBJS $BUILDDIR/levels_list.o"
 $CC $CFLAGS -c $SRCDIR/gui.cpp -o $BUILDDIR/gui.o
 OBJS="$OBJS $BUILDDIR/gui.o"
+$CC $CFLAGS -c $SRCDIR/level_select.cpp -o $BUILDDIR/level_select.o
+OBJS="$OBJS $BUILDDIR/level_select.o"
 
 # link the kernel
 
