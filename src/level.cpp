@@ -5,6 +5,7 @@
 
 #include "raylib.h"
 
+#include "actions.hpp"
 #include "globals.hpp"
 #include "levels_list.hpp"
 #include "main_menu.hpp"
@@ -18,7 +19,82 @@ void LevelText::draw(const Level &level, const Camera2D &camera) const {
 	const Vector2 scr_pos = GetWorldToScreen2D(world_pos, camera);
 	const int font_size = camera.zoom;
 
-	DrawTextEx(GetFontDefault(), text.c_str(), scr_pos, font_size, 0.0f, color);
+	// from raylib/src/rtext.c:1195
+	const float spacing = font_size / 10.0f;
+
+	DrawTextEx(GetFontDefault(), text.c_str(), scr_pos, font_size, spacing, color);
+}
+
+Level::PauseScreen::PauseScreen(Level &level)
+: level(level), unpause {
+	[this]() {
+		this->level.paused = false;
+	},
+	GuiBox::floating_x({ -137.5f, 100 }, { 250, 75 }), "RESUME"
+  }, main_menu {
+	[this]() {
+		this->level.transition.next = std::make_unique<MainMenu>();
+	},
+	GuiBox::floating_x({ 137.5f, 100 }, { 250, 75 }), "MAIN MENU"
+  }, prev_level {
+	[this]() {
+		this->level.transition.next = Levels::make_level(this->level.level_nr-1);
+	},
+	GuiBox::floating_x({ 0, 200 }, { 525, 75 }), "PREVIOUS LEVEL"
+  }, restart {
+	[this]() {
+		this->level.full_reset();
+	},
+	GuiBox::floating_x({ 0, 300 }, { 525, 75 }), "RESTART LEVEL"
+  }
+{
+	pause_text = Text { "", 50, { 0, 12.5 }, true, BLACK };
+	pause_text.text += "Paused - Level ";
+	pause_text.text += std::to_string(level.level_nr + 1);
+
+	if (this->level.level_nr == 0) {
+		prev_level.color_unfocus = LIGHTGRAY;
+	}
+}
+
+void Level::PauseScreen::update(float dt) {
+	pause_text.pos.x = global::WINDOW_WIDTH / 2.0f;
+
+	unpause.update(dt);
+	main_menu.update(dt);
+	if (this->level.level_nr) prev_level.update(dt);
+	restart.update(dt);
+}
+void Level::PauseScreen::draw() const {
+	DrawRectangle(
+		0, 0, global::WINDOW_WIDTH, global::WINDOW_HEIGHT,
+		{ 195, 195, 255, 127 }
+	);
+
+	pause_text.draw();
+
+	unpause.draw();
+	main_menu.draw();
+	prev_level.draw();
+	restart.draw();
+}
+
+Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 player_spawn)
+: tiles(tiles), w(w), h(h), player(std::make_unique<Player>()),
+  player_spawn { player_spawn.x, h + player_spawn.y }, level_nr(level_nr),
+  level_time(0), camera_move_time(0), paused(false), pause_screen(*this), gravity(20)
+{
+	player->reset(get_player_spawn());
+
+	camera.target = get_player_spawn();
+	camera.offset = {
+		global::WINDOW_WIDTH / 2.0f,
+		global::WINDOW_HEIGHT / 2.0f,
+	};
+	camera.rotation = 0;
+	camera.zoom = global::PPU;
+
+	pause_action = Action::Pause.register_cb([this]() { paused = !paused; });
 }
 
 Vector2 Level::get_offset() const {
@@ -32,7 +108,7 @@ static std::vector<Tile> tilemap_of(Image image) {
 	using namespace Levels;
 	for (int y = 0; y < image.height; ++y) {
 		for (int x = 0; x < image.width; ++x) {
-			const auto color = GetImageColor(image, x, y);
+	const auto color = GetImageColor(image, x, y);
 			for (int i = 0; i < int(sizeof(colormap)/sizeof(*colormap)); ++i) {
 				const auto r = colormap[i].color.r == color.r;
 				const auto g = colormap[i].color.g == color.g;
@@ -53,36 +129,11 @@ static std::vector<Tile> tilemap_of(Image image) {
 }
 
 Level::Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_spawn)
-	: tiles(tilemap, tilemap + w*h), w(w), h(h),
-	player(std::make_unique<Player>()),
-	player_spawn { player_spawn.x, h + player_spawn.y },
-	level_nr(level_nr), level_time(0), camera_move_time(0), gravity(20)
-{
-	player->reset(get_player_spawn());
-
-	camera.target = get_player_spawn();
-	camera.offset = {
-		global::WINDOW_WIDTH / 2.0f,
-		global::WINDOW_HEIGHT / 2.0f,
-	};
-	camera.rotation = 0;
-	camera.zoom = global::PPU;
-}
+: Level(level_nr, { tilemap, tilemap + w*h }, w, h, player_spawn)
+{ }
 Level::Level(size_t level_nr, Image image, Vector2 player_spawn)
-	: tiles(tilemap_of(image)), w(image.width), h(image.height),
-	player(std::make_unique<Player>()), player_spawn { player_spawn.x, h + player_spawn.y },
-	level_nr(level_nr), level_time(0), camera_move_time(0), gravity(20)
-{
-	player->reset(get_player_spawn());
-
-	camera.target = get_player_spawn();
-	camera.offset = {
-		global::WINDOW_WIDTH / 2.0f,
-		global::WINDOW_HEIGHT / 2.0f,
-	};
-	camera.rotation = 0;
-	camera.zoom = global::PPU;
-}
+: Level(level_nr, tilemap_of(image), image.width, image.height, player_spawn)
+{ }
 void Level::add_texts(std::vector<LevelText> texts) {
 	for (const auto &text : texts) {
 		this->texts.push_back(text);
@@ -139,6 +190,12 @@ TileType Level::get_tile_type(float x, float y) const {
 }
 
 void Level::update(float dt) {
+	if (paused) {
+		pause_screen.update(dt);
+
+		return;
+	}
+
 	level_time += dt;
 
 	player->update(*this, dt);
@@ -206,4 +263,8 @@ void Level::draw() const {
 	const int level_time_str_height = 20;
 	const int level_time_str_width = MeasureText(level_time_str.c_str(), level_time_str_height);
 	DrawText(level_time_str.c_str(), global::WINDOW_WIDTH - 10 - level_time_str_width, 10, level_time_str_height, BLACK);
+
+	if (paused) {
+		pause_screen.draw();
+	}
 }

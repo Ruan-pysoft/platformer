@@ -29,13 +29,12 @@ class Player {
 	JumpState jumpstate = JumpState::DoubleJumped;
 	bool killed = false;
 	bool level_completed = false;
-	bool reset_level = false;
 	ActionSustain::cb_handle_t jump_action;
 	ActionOnce::cb_handle_t double_jump_action;
 	ActionSustain::cb_handle_t walk_left_action;
 	ActionSustain::cb_handle_t walk_right_action;
 	ActionSustain::cb_handle_t fly_action;
-	ActionOnce::cb_handle_t reset_action;
+	ActionOnce::cb_handle_t suicide_action;
 
 	static constexpr Vector2 size = Vector2 { 1.0f, 2.0f };
 	static constexpr float jump_vel = 13;

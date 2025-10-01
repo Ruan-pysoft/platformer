@@ -1,7 +1,5 @@
 #include "levels_list.hpp"
 
-#include <cassert>
-
 namespace Levels {
 
 const std::vector<LevelInfo> levels = {
@@ -25,8 +23,6 @@ const std::vector<LevelInfo> levels = {
 };
 
 std::unique_ptr<Level> make_level(size_t idx) {
-	assert(idx >= 0); // size_t should be unsigned?
-
 	if (idx >= levels.size()) return nullptr;
 
 	const auto level_img = LoadImage(levels[idx].filename.c_str());

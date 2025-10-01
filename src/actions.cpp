@@ -73,6 +73,7 @@ ActionSustain Left{};
 ActionSustain Right{};
 ActionSustain Fly{};
 
-ActionOnce Reset{};
+ActionOnce Suicide{};
+ActionOnce Pause{};
 
 }

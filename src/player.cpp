@@ -35,8 +35,8 @@ Player::Player()  {
 	fly_action = Action::Fly.register_cb([this](float) {
 		inputs |= MotionInputs::Fly;
 	});
-	reset_action = Action::Reset.register_cb([this]() {
-		reset_level = true;
+	suicide_action = Action::Suicide.register_cb([this]() {
+		killed = true;
 	});
 }
 
@@ -205,7 +205,6 @@ void Player::reset(Vector2 pos) {
 
 	killed = false;
 	level_completed = false;
-	reset_level = false;
 }
 
 void Player::update(Level &level, float dt) {
@@ -216,9 +215,6 @@ void Player::update(Level &level, float dt) {
 	}
 	if (level_completed) {
 		level.complete(); return;
-	}
-	if (reset_level) {
-		level.full_reset(); return;
 	}
 
 	if (on_ground(level)) {
@@ -293,7 +289,6 @@ void Player::update(Level &level, float dt) {
 
 	if (killed) level.reset();
 	if (level_completed) level.complete();
-	if (reset_level) level.full_reset();
 }
 void Player::draw() const {
 	DrawRectangleV(

@@ -25,6 +25,7 @@ int main() {
 		global::WINDOW_WIDTH, global::WINDOW_HEIGHT,
 		"Hello Window"
 	);
+	SetExitKey(0); // unset escape to exit
 
 	InitAudioDevice();
 

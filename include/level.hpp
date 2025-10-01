@@ -5,6 +5,8 @@
 
 #include "raylib.h"
 
+#include "actions.hpp"
+#include "gui.hpp"
 #include "scene.hpp"
 
 enum class TileType { Empty, Solid, Danger, Goal };
@@ -29,6 +31,21 @@ struct LevelText {
 
 class Player;
 class Level : public Scene {
+	class PauseScreen {
+		Level &level;
+
+		Text pause_text;
+		Button unpause;
+		Button main_menu;
+		Button prev_level;
+		Button restart;
+	public:
+		PauseScreen(Level &level);
+
+		void update(float dt);
+		void draw() const;
+	};
+
 	const std::vector<Tile> tiles;
 	int w, h;
 	std::unique_ptr<Player> player;
@@ -38,11 +55,15 @@ class Level : public Scene {
 	std::vector<LevelText> texts;
 	float level_time;
 	float camera_move_time;
+	bool paused;
+	ActionOnce::cb_handle_t pause_action;
+	PauseScreen pause_screen;
 
 	const float camera_play = 4;
 	const float camera_follow = 0.5f;
 	const float camera_min_move_time = 0.25;
 
+	Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 player_spawn);
 public:
 	float gravity;
 

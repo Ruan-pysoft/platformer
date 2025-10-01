@@ -3,3 +3,4 @@
 -pedantic
 -I./include
 -I./raylib/src
+-I./raygui/src

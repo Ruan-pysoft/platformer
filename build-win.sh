@@ -11,11 +11,13 @@ NAME="game"
 CC="x86_64-w64-mingw32-g++"
 CFLAGS="-O2 -g"
 CFLAGS="$CFLAGS -Wall -Wextra"
-CFLAGS="$CFLAGS -I./include -I./raylib/src"
+CFLAGS="$CFLAGS -I./include -I./raylib/src" # -I./raygui/src"
+CFLAGS_EXTERNAL="-O2 -g"
+CFLAGS_EXTERNAL="$CFLAGS_EXTERNAL -I./include -I./raylib/src" # -I./raygui/src"
 
 LD="x86_64-w64-mingw32-g++"
 LDFLAGS="-O2"
-LDFLAGS="$LDFLAGS -L./raylib-5.5_win64_mingw-w64/lib -lraylib -lm -lgdi32 -lwinmm"
+LDFLAGS="$LDFLAGS -L./raylib-5.5_win64_mingw-w64/lib -lraylib -lm -lgdi32 -lwinmm -lGL"
 LDFLAGS="$LDFLAGS -static-libgcc -static-libstdc++"
 LDFLAGS="$LDFLAGS -static"
 
@@ -27,6 +29,8 @@ mkdir -p $BUILDDIR
 
 OBJS=""
 
+#$CC $CFLAGS_EXTERNAL -x c -c ./raygui/src/raygui.h -o $BUILDDIR/raygui.o -DRAYGUI_IMPLEMENTATION
+#OBJS="$OBJS $BUILDDIR/raygui.o"
 $CC $CFLAGS -c $SRCDIR/main.cpp -o $BUILDDIR/main.o
 OBJS="$OBJS $BUILDDIR/main.o"
 $CC $CFLAGS -c $SRCDIR/game.cpp -o $BUILDDIR/game.o
@@ -43,6 +47,8 @@ $CC $CFLAGS -c $SRCDIR/main_menu.cpp -o $BUILDDIR/main_menu.o
 OBJS="$OBJS $BUILDDIR/main_menu.o"
 $CC $CFLAGS -c $SRCDIR/levels_list.cpp -o $BUILDDIR/levels_list.o
 OBJS="$OBJS $BUILDDIR/levels_list.o"
+$CC $CFLAGS -c $SRCDIR/gui.cpp -o $BUILDDIR/gui.o
+OBJS="$OBJS $BUILDDIR/gui.o"
 
 # link the kernel
 

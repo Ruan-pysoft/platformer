@@ -9,13 +9,15 @@ BUILDDIR="build/"
 NAME="game"
 
 CC="g++"
-CFLAGS="-O2 -g"
+CFLAGS="-g" # "-O2 -g"
 CFLAGS="$CFLAGS -Wall -Wextra"
-CFLAGS="$CFLAGS -I./include -I./raylib/src"
+CFLAGS="$CFLAGS -I./include -I./raylib/src" # -I./raygui/src"
+CFLAGS_EXTERNAL="-O2 -g"
+CFLAGS_EXTERNAL="$CFLAGS_EXTERNAL -I./include -I./raylib/src" # -I./raygui/src"
 
 LD="g++"
 LDFLAGS="-O2"
-LDFLAGS="$LDFLAGS -L./raylib/src -lraylib"
+LDFLAGS="$LDFLAGS -L./raylib/src -lraylib -lm -lGL"
 
 # create the build directory
 
@@ -25,6 +27,8 @@ mkdir -p $BUILDDIR
 
 OBJS=""
 
+#$CC $CFLAGS_EXTERNAL -x c -c ./raygui/src/raygui.h -o $BUILDDIR/raygui.o -DRAYGUI_IMPLEMENTATION
+#OBJS="$OBJS $BUILDDIR/raygui.o"
 $CC $CFLAGS -c $SRCDIR/main.cpp -o $BUILDDIR/main.o
 OBJS="$OBJS $BUILDDIR/main.o"
 $CC $CFLAGS -c $SRCDIR/game.cpp -o $BUILDDIR/game.o
@@ -41,6 +45,8 @@ $CC $CFLAGS -c $SRCDIR/main_menu.cpp -o $BUILDDIR/main_menu.o
 OBJS="$OBJS $BUILDDIR/main_menu.o"
 $CC $CFLAGS -c $SRCDIR/levels_list.cpp -o $BUILDDIR/levels_list.o
 OBJS="$OBJS $BUILDDIR/levels_list.o"
+$CC $CFLAGS -c $SRCDIR/gui.cpp -o $BUILDDIR/gui.o
+OBJS="$OBJS $BUILDDIR/gui.o"
 
 # link the kernel
 
