@@ -3,9 +3,10 @@
 #include <memory>
 #include <string>
 
+#include "raylib.h"
+
 #include "levels_list.hpp"
 #include "main_menu.hpp"
-#include "raylib.h"
 
 LevelSelect::LevelSelect()
 : heading { "Levels", 50, { 0, 10 }, true, GRAY },
