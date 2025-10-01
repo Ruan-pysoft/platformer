@@ -24,6 +24,7 @@ const char config_header[] = BUILD_DIR"config.h";
 /* BUILDING THE RAYLIB LIBRARY */
 
 bool build_raylib(void) {
+	fprintf(stderr, "Trying to rebuild raylib...\n");
 #ifdef WINDOWS
 	nob_log(WARNING, "Cross-building for windows, raylib isn't built locally. Instead download the %s raylib release from https://github.com/raysan5/raylib", "raylib-5.5_win64_mingw-w64");
 #else
@@ -32,25 +33,39 @@ bool build_raylib(void) {
 	// debug raylib and release raylib are different
 	bool raylib_needs_rebuild = false;
 	if (!raylib_needs_rebuild) {
+		nob_log(INFO, "checking if libraylib.a exists...");
 		int exists = file_exists(libraylib);
 		if (exists < 0) return false;
 		raylib_needs_rebuild = exists == 0;
 	}
 	if (!raylib_needs_rebuild) {
+		nob_log(INFO, "checking if %s is newer than %s...", config_header, libraylib);
 		raylib_needs_rebuild = needs_rebuild1(libraylib, config_header);
 	}
+	nob_log(INFO, "Does raylib need rebuild? %s", raylib_needs_rebuild ? "yes" : "no");
 	if (!raylib_needs_rebuild) return true;
 
-	if (chdir("raylib/src") == -1) return true;
+	if (chdir("raylib/src") == -1) {
+		nob_log(ERROR, "Failed cd'ing into raylib/src");
+		return false;
+	}
 
 	Cmd cmd = {0};
+
+	cmd_append(&cmd, "make", "clean");
+	if (!cmd_run(&cmd)) return false;
 
 	cmd_append(&cmd, "make", "PLATFORM=PLATFORM_DESKTOP");
 #ifndef RELEASE
 	cmd_append(&cmd, "RAYLIB_BUILD_MODE=DEBUG");
 #endif
+	cmd_append(&cmd, "-j", temp_sprintf("%d", nprocs()));
+	if (!cmd_run(&cmd)) return false;
 
-	if (chdir("../..") == -1) return true;
+	if (chdir("../..") == -1) {
+		nob_log(ERROR, "Failed cd'ing out of raylib/src");
+		return false;
+	}
 #endif
 
 	return true;
