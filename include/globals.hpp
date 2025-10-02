@@ -1,7 +1,9 @@
 #pragma once
 
+struct Config;
 namespace global {
 
+extern Config config;
 extern const int FPS;
 extern int WINDOW_WIDTH;
 extern int WINDOW_HEIGHT;

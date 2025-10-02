@@ -64,6 +64,9 @@ bool build_raylib(void) {
 	if (!cmd_run(&cmd)) return false;
 
 	cmd_append(&cmd, "make", "PLATFORM=PLATFORM_DESKTOP");
+#ifdef WAYLAND
+	cmd_append(&cmd, "GLFW_LINUX_ENABLE_WAYLAND=TRUE");
+#endif
 #ifndef RELEASE
 	cmd_append(&cmd, "RAYLIB_BUILD_MODE=DEBUG");
 #endif
@@ -91,6 +94,7 @@ const char outfile[] = BUILD_DIR"game";
 // list headers used in the project
 #define HPP(header) const char *const header ## _hpp = INCLUDE_DIR #header ".hpp"
 HPP(actions);
+HPP(config);
 HPP(game);
 HPP(gui);
 HPP(globals);
@@ -119,6 +123,7 @@ HEADERS(main_menu, globals_hpp, level_select_hpp, levels_list_hpp);
 HEADERS(levels_list);
 HEADERS(gui);
 HEADERS(level_select, levels_list_hpp, main_menu_hpp);
+HEADERS(config);
 
 // most files in the project exists in src/name.cpp, outputs to build/name.o,
 // and depends on the headers defined in name_headers
@@ -143,6 +148,7 @@ struct Target {
 	STANDARD_FILE(levels_list),
 	STANDARD_FILE(gui),
 	STANDARD_FILE(level_select),
+	STANDARD_FILE(config),
 };
 
 // check if a particular file needs rebuilding

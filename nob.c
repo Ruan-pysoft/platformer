@@ -92,6 +92,10 @@ const char *initial_config =
 	nl
 	"// #define RELEASE // Enable release build"nl
 	"// #define WINDOWS // Cross-compile for windows"nl
+	"#define WAYLAND // Enable wayland build"nl
+	"// NOTE: for some reason, fullscreen doesn't work when running the X11"nl
+	"// build in sway; I suspect it is some issue with Xwayland, but"nl
+	"// fullscreen might just be broken on X11"nl
 	nl
 	"#endif /* CONFIG_H_ */"nl
 ;
