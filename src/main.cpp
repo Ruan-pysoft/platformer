@@ -74,7 +74,6 @@ int main() {
 			global::WINDOW_WIDTH = GetScreenWidth();
 			global::WINDOW_HEIGHT = GetScreenHeight();
 		}
-		std::cerr << "Window size: " << global::WINDOW_WIDTH << "x" << global::WINDOW_HEIGHT << std::endl;
 		inp_mgr.handleInputs();
 		game.update();
 		game.draw();

@@ -13,17 +13,17 @@ MainMenu::MainMenu()
 	[this]() {
 		transition.next = Levels::make_level(0);
 	},
-	GuiBox::floating_x({ 0, 250 }, { 400, 75 }), "PLAY"
+	GuiBox::floating_x({ 0, 100 }, { 400, 75 }), "PLAY"
   }, level_select {
 	[this]() {
 		transition.next = std::make_unique<LevelSelect>();
 	},
-	GuiBox::floating_x({ 0, 350 }, { 400, 75 }), "LEVEL SELECT"
+	GuiBox::floating_x({ 0, 200 }, { 400, 75 }), "LEVEL SELECT"
   }, quit {
 	[]() {
 		global::quit = true;
 	},
-	GuiBox::floating_x({ 0, 450 }, { 400, 75 }), "QUIT"
+	GuiBox::floating_x({ 0, 300 }, { 400, 75 }), "QUIT"
   },
   title { "This is a game", 50, { 0, 10 }, true, GRAY }
 { }
