@@ -67,6 +67,9 @@ class Level : public Scene {
 	Overlay win_overlay;
 	float frame_acc = 0;
 
+	ActionOnce::cb_handle_t reset_action;
+	ActionOnce::cb_handle_t next_level_action;
+
 	const float camera_play = 4;
 	const float camera_follow = 0.5f;
 	const float camera_min_move_time = 0.25;

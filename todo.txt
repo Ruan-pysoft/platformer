@@ -2,7 +2,7 @@
  - separate collision detection from handling
  - more levels
  - checkpoints
- - menus: settings menu, level select menu
+ - menus: settings menu
  - ! gameplay instructions (how-to menu)
  - level unlocks
  - stars for levels (based on time + deaths; maybe a special achievement for completing deathless & with a short time?)

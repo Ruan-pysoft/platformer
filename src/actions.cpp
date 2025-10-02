@@ -74,6 +74,8 @@ ActionSustain Right{};
 ActionSustain Fly{};
 
 ActionOnce Suicide{};
+ActionOnce Reset{};
 ActionOnce Pause{};
+ActionOnce NextLevel{};
 
 }

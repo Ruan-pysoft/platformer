@@ -172,6 +172,18 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 pla
 		},
 		GuiBox::floating_x({ 0, 350 }, { 525, 75 }), "RESTART LEVEL"
 	});
+
+	reset_action = Action::Reset.register_cb([this]() {
+		full_reset();
+	});
+	next_level_action = Action::NextLevel.register_cb([this]() {
+		if (state == LevelState::WinScreen) {
+			transition.next = Levels::make_level(this->level_nr+1);
+			if (transition.next == nullptr) {
+				transition.next = std::make_unique<MainMenu>();
+			}
+		}
+	});
 }
 
 Vector2 Level::get_offset() const {

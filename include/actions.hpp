@@ -105,7 +105,9 @@ extern ActionSustain Right;
 extern ActionSustain Fly;
 
 extern ActionOnce Suicide;
+extern ActionOnce Reset;
 extern ActionOnce Pause;
+extern ActionOnce NextLevel;
 
 static const struct {
 	KeyboardKey key;
@@ -117,7 +119,9 @@ static const struct {
 	{ KEY_UP, DoubleJump, true },
 	{ KEY_K, DoubleJump, true },
 	{ KEY_X, Suicide, true },
+	{ KEY_R, Reset, true },
 	{ KEY_ESCAPE, Pause, true },
+	{ KEY_ENTER, NextLevel, true },
 };
 
 static const struct {
