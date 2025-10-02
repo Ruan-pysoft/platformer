@@ -23,6 +23,7 @@ enum class MotionInputs : uint8_t {
 
 class Level;
 class Player {
+	Vector2 prev_pos = { 0, 0 };
 	Vector2 pos = { 0, 0 };
 	Vector2 vel = { 0, 0 };
 	MotionInputs inputs = MotionInputs::None;
@@ -43,7 +44,7 @@ class Player {
 	static constexpr float walk_dec = 32;
 	static constexpr float walk_vel = 20;
 	static constexpr float friction = 12;
-	static constexpr float coyote_time = 1.0f / 16;
+	static constexpr int coyote_frames = 2;
 
 	bool on_ground(Level &level);
 	bool test_input(MotionInputs input);
@@ -53,10 +54,10 @@ class Player {
 public:
 	Player();
 
-	Vector2 get_pos() const;
+	Vector2 get_pos(float interp) const;
 	void reset(Vector2 pos);
 	int get_deaths() const;
 
-	void update(Level &level, float dt);
-	void draw() const;
+	void update(Level &level);
+	void draw(float interp) const;
 };

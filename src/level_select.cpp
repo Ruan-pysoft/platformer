@@ -31,7 +31,7 @@ LevelSelect::LevelSelect()
 
 	for (int i = 0; i < int(Levels::levels.size()); ++i) {
 		const int lvl_idx = i;
-		const std::string lvl_str = std::to_string(i);
+		const std::string lvl_str = std::to_string(i+1);
 
 		const float y =
 			level_btn_first_row_y

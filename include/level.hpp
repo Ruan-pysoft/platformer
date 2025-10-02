@@ -58,13 +58,14 @@ class Level : public Scene {
 	Vector2 player_spawn;
 	Camera2D camera;
 	size_t level_nr;
-	std::vector<LevelText> texts;
-	float level_time;
-	float camera_move_time;
-	LevelState state;
+	std::vector<LevelText> texts = {};
+	int level_ticks = 0;
+	float camera_move_time = 0;
+	LevelState state = LevelState::Active;
 	ActionOnce::cb_handle_t pause_action;
 	Overlay pause_overlay;
 	Overlay win_overlay;
+	float frame_acc = 0;
 
 	const float camera_play = 4;
 	const float camera_follow = 0.5f;
@@ -72,7 +73,7 @@ class Level : public Scene {
 
 	Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 player_spawn);
 public:
-	float gravity;
+	float gravity = 20;
 
 	Vector2 get_offset() const;
 

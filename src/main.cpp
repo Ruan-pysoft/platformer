@@ -95,6 +95,7 @@ const int FPS = 60;
 int WINDOW_WIDTH = 800 * SCALE;
 int WINDOW_HEIGHT = 600 * SCALE;
 bool quit = false;
+const int PHYSICS_FPS = 32;
 
 const int PPU = 20 * SCALE;
 

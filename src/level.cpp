@@ -72,8 +72,7 @@ void Level::Overlay::draw() const {
 Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 player_spawn)
 : tiles(tiles), w(w), h(h), player(std::make_unique<Player>()),
   player_spawn { player_spawn.x, h + player_spawn.y }, level_nr(level_nr),
-  level_time(0), camera_move_time(0), state(LevelState::Active),
-  pause_overlay(*this), win_overlay(*this), gravity(20)
+  pause_overlay(*this), win_overlay(*this)
 {
 	player->reset(get_player_spawn());
 
@@ -229,14 +228,12 @@ void Level::reset() {
 	player->reset(get_player_spawn());
 }
 void Level::full_reset() {
-	std::cerr << "Level " << level_nr << " time: " << level_time << std::endl;
 	transition.next = Levels::make_level(level_nr);
 }
 void Level::complete() {
 	state = LevelState::WinScreen;
 }
 void Level::exit() {
-	std::cerr << "Level " << level_nr << " time: " << level_time << std::endl;
 	transition.next = std::make_unique<MainMenu>();
 }
 
@@ -272,7 +269,12 @@ void Level::update(float dt) {
 			Text *time_text = win_overlay.get_text(1);
 			if (time_text->text.size() == 0) {
 				time_text->text = "Completion time: ";
-				time_text->text += std::to_string(level_time);
+				const int seconds = level_ticks / global::PHYSICS_FPS;
+				const int frames = level_ticks % global::PHYSICS_FPS;
+				time_text->text += std::to_string(seconds);
+				time_text->text += ";";
+				if (frames < 10) time_text->text += "0";
+				time_text->text += std::to_string(frames);
 			}
 			Text *deaths_text = win_overlay.get_text(2);
 			if (deaths_text->text.size() == 0) {
@@ -287,11 +289,16 @@ void Level::update(float dt) {
 
 	if (state != LevelState::Active) return;
 
-	level_time += dt;
+	frame_acc += dt;
+	const bool physics_tick = frame_acc >= 1.0f/global::PHYSICS_FPS;
+	if (physics_tick) {
+		frame_acc -= 1.0f/global::PHYSICS_FPS;
+		++level_ticks;
 
-	player->update(*this, dt);
+		player->update(*this);
+	}
 
-	const auto player_pos = player->get_pos();
+	const auto player_pos = player->get_pos(frame_acc * global::PHYSICS_FPS);
 	const Vector2 d = {
 		player_pos.x - camera.target.x,
 		player_pos.y - camera.target.y,
@@ -313,7 +320,6 @@ void Level::update(float dt) {
 		global::WINDOW_HEIGHT / 2.0f,
 	};
 }
-#include <sstream>
 void Level::draw() const {
 	ClearBackground(RAYWHITE);
 
@@ -323,7 +329,7 @@ void Level::draw() const {
 
 	BeginMode2D(camera);
 
-	player->draw();
+	player->draw(frame_acc * global::PHYSICS_FPS);
 
 	const auto offset = get_offset();
 	for (int y = 0; y < h; ++y) {
@@ -347,10 +353,13 @@ void Level::draw() const {
 	const int level_display_height = 20;
 	DrawText(level_display.c_str(), 10, 10, level_display_height, BLACK);
 
-	std::ostringstream level_time_srm;
-	level_time_srm.precision(2);
-	level_time_srm << std::fixed << level_time;
-	std::string level_time_str = level_time_srm.str();
+	std::string level_time_str = "";
+	const int seconds = level_ticks / global::PHYSICS_FPS;
+	const int frames = level_ticks % global::PHYSICS_FPS;
+	level_time_str += std::to_string(seconds);
+	level_time_str += ";";
+	if (frames < 10) level_time_str += "0";
+	level_time_str += std::to_string(frames);
 	const int level_time_str_height = 20;
 	const int level_time_str_width = MeasureText(level_time_str.c_str(), level_time_str_height);
 	DrawText(level_time_str.c_str(), global::WINDOW_WIDTH - 10 - level_time_str_width, 10, level_time_str_height, BLACK);

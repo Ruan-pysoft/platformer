@@ -19,7 +19,7 @@ inline constexpr bool test_input(MotionInputs mask, MotionInputs input) {
 
 static constexpr float EPS = 1.0f / 1024;
 
-Player::Player()  {
+Player::Player() {
 	jump_action = Action::Jump.register_cb([this](float) {
 		inputs |= MotionInputs::Jump;
 	});
@@ -200,11 +200,15 @@ void Player::resolve_collisions_y(Level &level) {
 	}
 }
 
-Vector2 Player::get_pos() const {
-	return pos;
+Vector2 Player::get_pos(float interp) const {
+	return {
+		prev_pos.x*(1 - interp) + pos.x*interp,
+		prev_pos.y*(1 - interp) + pos.y*interp,
+	};
 }
 void Player::reset(Vector2 pos) {
 	this->pos = pos;
+	this->prev_pos = pos;
 	this->vel = { 0, 0 };
 	this->inputs = MotionInputs::None;
 	this->jumpstate = JumpState::DoubleJumped;
@@ -213,8 +217,12 @@ void Player::reset(Vector2 pos) {
 	level_completed = false;
 }
 
-void Player::update(Level &level, float dt) {
-	static float coyote_time_left = 0;
+void Player::update(Level &level) {
+	static int coyote_frames_left = 0;
+
+	const float dt = 1.0f / global::PHYSICS_FPS;
+
+	prev_pos = pos;
 
 	if (killed) {
 		level.reset(); return;
@@ -225,10 +233,10 @@ void Player::update(Level &level, float dt) {
 
 	if (on_ground(level)) {
 		jumpstate = JumpState::Grounded;
-		coyote_time_left = coyote_time;
+		coyote_frames_left = coyote_frames;
 	} else if (jumpstate == JumpState::Grounded) {
-		coyote_time_left -= dt;
-		if (coyote_time_left <= 0) jumpstate = JumpState::Airborne;
+		--coyote_frames_left;
+		if (coyote_frames_left <= 0) jumpstate = JumpState::Airborne;
 	}
 
 	/*if (try_jump) std::cerr << "Trying to jump!" << std::endl;
@@ -296,9 +304,10 @@ void Player::update(Level &level, float dt) {
 	if (killed) level.reset();
 	if (level_completed) level.complete();
 }
-void Player::draw() const {
+void Player::draw(float interp) const {
+	const auto visual_pos = get_pos(interp);
 	DrawRectangleV(
-		Vector2{ pos.x - size.x/2, pos.y - size.y },
+		Vector2{ visual_pos.x - size.x/2, visual_pos.y - size.y },
 		size,
 		BLACK
 	);
