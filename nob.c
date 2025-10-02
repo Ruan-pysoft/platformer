@@ -9,12 +9,46 @@
 
 extern const char *initial_config;
 
+void usage(FILE *stream) {
+	fprintf(stream, "Usage: ./nob [OPTIONS]\n");
+	fprintf(stream, "OPTIONS:\n");
+	fprintf(stream, "    clean             deletes all build files\n");
+	fprintf(stream, "    init              generates config.h, if it does not exist\n");
+	fprintf(stream, "    run               run the executable after it has been built\n");
+	fprintf(stream, "    help, --help, -h  displays this help message and exits\n");
+}
+
 int main(int argc, char **argv) {
 	NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h", "src_build/dirs.h");
 
-	if (!mkdir_if_not_exists(BUILD_DIR)) return 1;
-
 	Cmd cmd = {0};
+
+	bool clean = false;
+	bool init = false;
+	bool help = false;
+
+	for (int i = 0; i < argc; ++i) {
+		if (strcmp(argv[i], "clean") == 0) clean = true;
+		if (strcmp(argv[i], "init") == 0) init = true;
+		if (strcmp(argv[i], "help") == 0) help = true;
+		if (strcmp(argv[i], "--help") == 0) help = true;
+		if (strcmp(argv[i], "-h") == 0) help = true;
+	}
+
+	if (help) {
+		usage(stdout);
+		return 0;
+	}
+	if (clean) {
+		nob_log(INFO, "cleaning up build files -- not building any exes");
+
+		cmd_append(&cmd, "rm", "-rf", BUILD_DIR);
+		if (!cmd_run(&cmd)) return 1;
+
+		return 0;
+	}
+
+	if (!mkdir_if_not_exists(BUILD_DIR)) return 1;
 
 	const char *conf_path = BUILD_DIR"config.h";
 	int exists = file_exists(conf_path);
@@ -36,6 +70,10 @@ int main(int argc, char **argv) {
 	nob_cc_output(&cmd, output_path);
 	nob_cc_inputs(&cmd, input_path);
 	if (!cmd_run(&cmd)) return 1;
+
+	// if only initialising build system,
+	// don't actually run the build
+	if (init) return 0;
 
 	cmd_append(&cmd, output_path);
 	// forward args to configured build script
