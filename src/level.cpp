@@ -277,10 +277,11 @@ void Level::update(float dt) {
 				if (frames < 10) time_text->text += "0";
 				time_text->text += std::to_string(frames);
 			}
-			Text *deaths_text = win_overlay.get_text(2);
-			if (deaths_text->text.size() == 0) {
-				deaths_text->text = "Total deaths: ";
-				deaths_text->text += std::to_string(player->get_deaths());
+			Text *jumps_text = win_overlay.get_text(2);
+			if (jumps_text->text.size() == 0) {
+				const Player::Stats stats = player->get_stats();
+				jumps_text->text = "Total jumps: ";
+				jumps_text->text += std::to_string(stats.jumps + stats.double_jumps);
 			}
 
 			win_overlay.update(dt);

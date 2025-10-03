@@ -23,12 +23,20 @@ enum class MotionInputs : uint8_t {
 
 class Level;
 class Player {
+public:
+	struct Stats {
+		int jumps = 0;
+		int double_jumps = 0;
+		int deaths = 0;
+		int times_spawned = 0;
+	};
+
+private:
 	Vector2 prev_pos = { 0, 0 };
 	Vector2 pos = { 0, 0 };
 	Vector2 vel = { 0, 0 };
 	MotionInputs inputs = MotionInputs::None;
 	JumpState jumpstate = JumpState::DoubleJumped;
-	int deaths = 0;
 	bool killed = false;
 	bool level_completed = false;
 	ActionSustain::cb_handle_t jump_action;
@@ -37,6 +45,7 @@ class Player {
 	ActionSustain::cb_handle_t walk_right_action;
 	ActionSustain::cb_handle_t fly_action;
 	ActionOnce::cb_handle_t suicide_action;
+	Stats stats;
 
 	static constexpr Vector2 size = Vector2 { 1.0f, 2.0f };
 	static constexpr float jump_vel = 13.25; // old vel is 13, makes some double jumps harder
@@ -56,7 +65,7 @@ public:
 
 	Vector2 get_pos(float interp) const;
 	void reset(Vector2 pos);
-	int get_deaths() const;
+	Stats get_stats() const;
 
 	void update(Level &level);
 	void draw(float interp) const;

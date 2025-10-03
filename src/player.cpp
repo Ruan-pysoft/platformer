@@ -36,7 +36,7 @@ Player::Player() {
 		inputs |= MotionInputs::Fly;
 	});
 	suicide_action = Action::Suicide.register_cb([this]() {
-		if (!killed) ++deaths;
+		if (!killed) ++stats.deaths;
 		killed = true;
 	});
 }
@@ -73,8 +73,8 @@ bool Player::on_ground(Level &level) {
 bool Player::test_input(MotionInputs input) {
 	return ::test_input(inputs, input);
 }
-int Player::get_deaths() const {
-	return deaths;
+Player::Stats Player::get_stats() const {
+	return stats;
 }
 
 void Player::resolve_collisions_x(Level &level) {
@@ -109,7 +109,7 @@ void Player::resolve_collisions_x(Level &level) {
 					if (collision.dist.x > 0 && vel.x < 0) vel.x = 0;
 				} break;
 				case TileType::Danger: {
-					if (!killed) ++deaths;
+					if (!killed) ++stats.deaths;
 					killed = true;
 				} break;
 				case TileType::Goal: {
@@ -154,7 +154,7 @@ void Player::resolve_collisions_y(Level &level) {
 					if (collision.dist.y > 0 && vel.y < 0) vel.y = 0;
 				} break;
 				case TileType::Danger: {
-					if (!killed) ++deaths;
+					if (!killed) ++stats.deaths;
 					killed = true;
 				} break;
 				case TileType::Goal: {
@@ -173,6 +173,8 @@ Vector2 Player::get_pos(float interp) const {
 	};
 }
 void Player::reset(Vector2 pos) {
+	++stats.times_spawned;
+
 	this->pos = pos;
 	this->prev_pos = pos;
 	this->vel = { 0, 0 };
@@ -206,9 +208,11 @@ void Player::update(Level &level) {
 	}
 
 	if (test_input(MotionInputs::Jump) && jumpstate == JumpState::Grounded) {
+		++stats.jumps;
 		vel.y = -jump_vel;
 		jumpstate = JumpState::Airborne;
 	} else if (test_input(MotionInputs::DoubleJump) && jumpstate == JumpState::Airborne) {
+		++stats.double_jumps;
 		vel.y = -jump_vel;
 		jumpstate = JumpState::DoubleJumped;
 	}
