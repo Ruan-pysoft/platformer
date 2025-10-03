@@ -105,6 +105,7 @@ HPP(levels_list);
 HPP(main_menu);
 HPP(player);
 HPP(scene);
+HPP(util);
 
 // list the headers each .cpp file depends on
 #define HEADERS(of, ...) const char *const of ## _headers[] = { of ## _hpp, __VA_ARGS__ }
@@ -112,7 +113,7 @@ HPP(scene);
 
 HEADERS_NO_SELF(main, actions_hpp, input_manager_hpp, game_hpp, globals_hpp);
 HEADERS(game, globals_hpp, main_menu_hpp, scene_hpp);
-HEADERS(player, level_hpp);
+HEADERS(player, level_hpp, util_hpp);
 HEADERS(input_manager);
 HEADERS(actions, input_manager_hpp);
 HEADERS(level,
@@ -124,6 +125,7 @@ HEADERS(levels_list);
 HEADERS(gui);
 HEADERS(level_select, levels_list_hpp, main_menu_hpp);
 HEADERS(config);
+HEADERS(util);
 
 // most files in the project exists in src/name.cpp, outputs to build/name.o,
 // and depends on the headers defined in name_headers
@@ -149,6 +151,7 @@ struct Target {
 	STANDARD_FILE(gui),
 	STANDARD_FILE(level_select),
 	STANDARD_FILE(config),
+	STANDARD_FILE(util),
 };
 
 // check if a particular file needs rebuilding

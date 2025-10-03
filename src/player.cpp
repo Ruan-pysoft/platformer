@@ -1,9 +1,9 @@
 #include "player.hpp"
 
 #include <algorithm>
-//#include <iostream>
 
 #include "level.hpp"
+#include "util.hpp"
 
 inline constexpr MotionInputs operator|(MotionInputs a, MotionInputs b) {
 	return static_cast<MotionInputs>(
@@ -78,8 +78,10 @@ int Player::get_deaths() const {
 }
 
 void Player::resolve_collisions_x(Level &level) {
-	const float left_edge = pos.x - size.x/2;
-	const float right_edge = pos.x + size.x/2;
+	const Rectangle player_collider = {
+		pos.x - size.x/2, pos.y - size.y,
+		size.x, size.y
+	};
 
 	for (int dy = -2; dy <= 1; ++dy) {
 		for (int dx = -1; dx <= 1; ++dx) {
@@ -92,39 +94,19 @@ void Player::resolve_collisions_x(Level &level) {
 
 			if (type == TileType::Empty) continue;
 			if (collider.width == 0 && collider.height == 0) continue;
-			if (collider.y + EPS >= pos.y || collider.y + collider.height - EPS <= pos.y - size.y) continue;
 
-			const float left_dist_near = left_edge - (collider.x + collider.width);
-			const float left_dist_far  = left_edge - collider.x;
-			const float right_dist_near = collider.x - right_edge;
-			const float right_dist_far  = (collider.x + collider.width) - right_edge;
+			const auto collision = util::collide(player_collider, collider);
 
-			const bool touching_left = left_dist_near < 0 && left_dist_far > 0;
-			const bool touching_right = right_dist_near < 0 && right_dist_far > 0;
-			const bool inside_left = left_dist_near < -EPS && left_dist_far > 0;
-			const bool inside_right = right_dist_near < -EPS && right_dist_far > 0;
+			// if there is no x collision, or if the player only
+			// slightly overlaps with the block in the y axis,
+			// no work to be done
+			if (!collision.x_touches || std::abs(collision.dist.y) <= EPS) continue;
 
-			const float left_overlap = -left_dist_near; // only if inside_left is true
-			const float right_overlap = -right_dist_near; // only if inside_right is true
-
-			if (touching_left || touching_right) switch (type) {
-				case TileType::Solid: if (inside_left || inside_right) {
-					/*std::cerr << "Overlapping! (" << pos.x << ',' << pos.y << ')' << std::endl;
-					std::cerr << "At relative block " << dx << ',' << dy << std::endl;
-					std::cerr << "Left distances:  " << left_dist_near << " // " << left_dist_far << std::endl;
-					std::cerr << "Right distances: " << right_dist_near << " // " << right_dist_far << std::endl;
-					std::cerr << "Left overlap:  " << left_overlap << std::endl;
-					std::cerr << "Right overlap: " << right_overlap << std::endl;*/
-
-					if (left_overlap < right_overlap) {
-						/*std::cerr << "Resolving collision on the left rightwards..." << std::endl;*/
-						pos.x = collider.x + collider.width + size.x/2;
-						if (vel.x < 0) vel.x = 0;
-					} else {
-						/*std::cerr << "Resolving collision on the right leftwards..." << std::endl;*/
-						pos.x = collider.x - size.x/2;
-						if (vel.x > 0) vel.x = 0;
-					}
+			switch (type) {
+				case TileType::Solid: if (std::abs(collision.dist.x) >= EPS) {
+					pos.x = collision.new_pos.x + size.x/2;
+					if (collision.dist.x < 0 && vel.x > 0) vel.x = 0;
+					if (collision.dist.x > 0 && vel.x < 0) vel.x = 0;
 				} break;
 				case TileType::Danger: {
 					if (!killed) ++deaths;
@@ -141,8 +123,10 @@ void Player::resolve_collisions_x(Level &level) {
 void Player::resolve_collisions_y(Level &level) {
 	if (pos.y > 0) pos.y = 0;
 
-	const float top_edge = pos.y - size.y;
-	const float bottom_edge = pos.y;
+	const Rectangle player_collider = {
+		pos.x - size.x/2, pos.y - size.y,
+		size.x, size.y
+	};
 
 	for (int dy = -2; dy <= 1; ++dy) {
 		for (int dx = -1; dx <= 1; ++dx) {
@@ -153,39 +137,21 @@ void Player::resolve_collisions_y(Level &level) {
 			const auto collider = level.get_collider(check_point.x, check_point.y);
 			const auto type = level.get_tile_type(check_point.x, check_point.y);
 
+			if (type == TileType::Empty) continue;
 			if (collider.width == 0 && collider.height == 0) continue;
-			if (collider.x + EPS >= pos.x + size.x/2 || collider.x + collider.width - EPS <= pos.x - size.x/2) continue;
 
-			const float top_dist_near = top_edge - (collider.y + collider.height);
-			const float top_dist_far = top_edge - collider.y;
-			const float bottom_dist_near = collider.y - bottom_edge;
-			const float bottom_dist_far = (collider.y + collider.height) - bottom_edge;
+			const auto collision = util::collide(player_collider, collider);
 
-			const bool touching_top = top_dist_near < 0 && top_dist_far > 0;
-			const bool touching_bottom = bottom_dist_near < 0 && bottom_dist_far > 0;
-			const bool inside_top = top_dist_near < -EPS && top_dist_far > 0;
-			const bool inside_bottom = bottom_dist_near < -EPS && bottom_dist_far > 0;
+			// if there is no y collision, or if the player only
+			// slightly overlaps with the block in the x axis,
+			// no work to be done
+			if (!collision.y_touches || std::abs(collision.dist.x) <= EPS) continue;
 
-			const float top_overlap = -top_dist_near; // only if inside_top is true
-			const float bottom_overlap = -bottom_dist_near; // only if inside_bottom is true
-
-			if (touching_top || touching_bottom) switch (type) {
-				case TileType::Solid: if (inside_top || inside_bottom) {
-					/*std::cerr << "Overlapping! (" << pos.x << ',' << pos.y << ')' << std::endl;
-					std::cerr << "At relative block " << dx << ',' << dy << std::endl;
-					std::cerr << "Top distances:    " << top_dist_near << " // " << top_dist_far << std::endl;
-					std::cerr << "Bottom distances: " << bottom_dist_near << " // " << bottom_dist_far << std::endl;
-					std::cerr << "Top overlap:    " << top_overlap << std::endl;
-					std::cerr << "Bottom overlap: " << bottom_overlap << std::endl;*/
-					if (top_overlap < bottom_overlap) {
-						/*std::cerr << "Resolving collision on the top downwards..." << std::endl;*/
-						pos.y = collider.y + collider.height + size.y;
-						if (vel.y < 0) vel.y = 0;
-					} else {
-						/*std::cerr << "Resolving collision on the bottom upwards..." << std::endl;*/
-						pos.y = collider.y;
-						if (vel.y > 0) vel.y = 0;
-					}
+			switch (type) {
+				case TileType::Solid: if (std::abs(collision.dist.y) >= EPS) {
+					pos.y = collision.new_pos.y + size.y;
+					if (collision.dist.y < 0 && vel.y > 0) vel.y = 0;
+					if (collision.dist.y > 0 && vel.y < 0) vel.y = 0;
 				} break;
 				case TileType::Danger: {
 					if (!killed) ++deaths;
@@ -238,11 +204,6 @@ void Player::update(Level &level) {
 		--coyote_frames_left;
 		if (coyote_frames_left <= 0) jumpstate = JumpState::Airborne;
 	}
-
-	/*if (try_jump) std::cerr << "Trying to jump!" << std::endl;
-	if (try_djump) std::cerr << "Trying to double jump!" << std::endl;
-	if (walk_left) std::cerr << "Walking left!" << std::endl;
-	if (walk_right) std::cerr << "Walking right!" << std::endl;*/
 
 	if (test_input(MotionInputs::Jump) && jumpstate == JumpState::Grounded) {
 		vel.y = -jump_vel;

@@ -1,5 +1,4 @@
  - move some variables from `globals` to some config class – eg. allow dynamic window resizing
- - separate collision detection from handling
  - more levels
  - checkpoints
  - menus: settings menu
