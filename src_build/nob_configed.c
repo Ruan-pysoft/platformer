@@ -113,17 +113,19 @@ HPP(util);
 
 HEADERS_NO_SELF(main, actions_hpp, input_manager_hpp, game_hpp, globals_hpp);
 HEADERS(game, globals_hpp, main_menu_hpp, scene_hpp);
-HEADERS(player, level_hpp, util_hpp);
+HEADERS(player, actions_hpp, level_hpp, util_hpp);
 HEADERS(input_manager);
 HEADERS(actions, input_manager_hpp);
 HEADERS(level,
-	actions_hpp, globals_hpp, levels_list_hpp, main_menu_hpp, player_hpp,
-	scene_hpp
+	actions_hpp, globals_hpp, gui_hpp, levels_list_hpp, main_menu_hpp,
+	player_hpp, scene_hpp
 );
-HEADERS(main_menu, globals_hpp, level_select_hpp, levels_list_hpp);
-HEADERS(levels_list);
-HEADERS(gui);
-HEADERS(level_select, levels_list_hpp, main_menu_hpp);
+HEADERS(main_menu,
+	globals_hpp, gui_hpp, level_select_hpp, levels_list_hpp, scene_hpp
+);
+HEADERS(levels_list, level_hpp);
+HEADERS(gui, globals_hpp);
+HEADERS(level_select, gui_hpp, levels_list_hpp, main_menu_hpp, scene_hpp);
 HEADERS(config);
 HEADERS(util);
 
