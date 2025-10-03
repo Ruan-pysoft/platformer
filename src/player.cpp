@@ -191,10 +191,10 @@ void Player::update(Level &level) {
 	prev_pos = pos;
 
 	if (killed) {
-		level.reset(); return;
+		level.respawn_player(); return;
 	}
 	if (level_completed) {
-		level.complete(); return;
+		level.display_win_overlay(); return;
 	}
 
 	if (on_ground(level)) {
@@ -262,8 +262,8 @@ void Player::update(Level &level) {
 
 	inputs = MotionInputs::None;
 
-	if (killed) level.reset();
-	if (level_completed) level.complete();
+	if (killed) level.respawn_player();
+	if (level_completed) level.display_win_overlay();
 }
 void Player::draw(float interp) const {
 	const auto visual_pos = get_pos(interp);

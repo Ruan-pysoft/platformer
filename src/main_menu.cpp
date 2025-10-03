@@ -5,13 +5,13 @@
 #include "raylib.h"
 
 #include "globals.hpp"
+#include "level_scene.hpp"
 #include "level_select.hpp"
-#include "levels_list.hpp"
 
 MainMenu::MainMenu()
 : play {
 	[this]() {
-		transition.next = Levels::make_level(0);
+		transition.next = LevelScene::from_level_nr(0);
 	},
 	GuiBox::floating_x({ 0, 100 }, { 400, 75 }), "PLAY"
   }, level_select {

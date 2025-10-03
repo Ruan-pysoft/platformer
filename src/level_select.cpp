@@ -5,6 +5,7 @@
 
 #include "raylib.h"
 
+#include "level_scene.hpp"
 #include "levels_list.hpp"
 #include "main_menu.hpp"
 
@@ -42,7 +43,7 @@ LevelSelect::LevelSelect()
 
 		level_buttons.push_back({
 			[this, lvl_idx]() {
-				transition.next = Levels::make_level(lvl_idx);
+				transition.next = LevelScene::from_level_nr(lvl_idx);
 			},
 			GuiBox::floating_x(
 				{ x_offset, y },

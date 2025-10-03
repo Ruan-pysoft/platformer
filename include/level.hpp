@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -8,7 +9,6 @@
 
 #include "actions.hpp"
 #include "gui.hpp"
-#include "scene.hpp"
 
 enum class TileType { Empty, Solid, Danger, Goal };
 
@@ -31,9 +31,10 @@ struct LevelText {
 };
 
 enum class LevelState { Active, Paused, WinScreen };
+enum class LevelChange { None, Prev, Next, Reset, MainMenu };
 
 class Player;
-class Level : public Scene {
+class Level {
 	class Overlay {
 		Level &level;
 
@@ -77,8 +78,10 @@ class Level : public Scene {
 	Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 player_spawn);
 public:
 	float gravity = 20;
+	LevelChange change = LevelChange::None;
 
 	Vector2 get_offset() const;
+	int get_level_nr() const;
 
 	Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_spawn);
 	Level(size_t level_nr, Image image, Vector2 player_spawn);
@@ -86,16 +89,14 @@ public:
 	~Level();
 	Vector2 get_player_spawn() const;
 
-	void reset();
-	void full_reset();
-	void complete();
-	void exit();
+	void respawn_player();
+	void display_win_overlay();
 
 	Rectangle get_collider(float x, float y) const;
 	TileType get_tile_type(float x, float y) const;
 
-	void update(float dt) override;
-	void draw() const override;
+	void update(float dt);
+	void draw() const;
 };
 
 namespace Levels {

@@ -9,9 +9,7 @@
 #include "actions.hpp"
 #include "globals.hpp"
 #include "levels_list.hpp"
-#include "main_menu.hpp"
 #include "player.hpp"
-#include "scene.hpp"
 
 void LevelText::draw(const Level &level, const Camera2D &camera) const {
 	const Vector2 lvl_offset = level.get_offset();
@@ -104,7 +102,7 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 pla
 	});
 	pause_overlay.add_button({
 		[this]() {
-			transition.next = std::make_unique<MainMenu>();
+			change = LevelChange::MainMenu;
 		},
 		GuiBox::floating_x({ 137.5f, 100 }, { 250, 75 }), "MAIN MENU"
 	});
@@ -119,14 +117,14 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 pla
 	} else {
 		pause_overlay.add_button({
 			[this]() {
-				transition.next = Levels::make_level(this->level_nr - 1);
+				change = LevelChange::Prev;
 			},
 			pause_prev_box, pause_prev_txt
 		});
 	}
 	pause_overlay.add_button({
 		[this]() {
-			full_reset();
+			change = LevelChange::Reset;
 		},
 		GuiBox::floating_x({ 0, 300 }, { 525, 75 }), "RESTART LEVEL"
 	});
@@ -137,16 +135,13 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 pla
 
 	win_overlay.add_button({
 		[this]() {
-			transition.next = Levels::make_level(this->level_nr+1);
-			if (transition.next == nullptr) {
-				transition.next = std::make_unique<MainMenu>();
-			}
+			change = LevelChange::Next;
 		},
 		GuiBox::floating_x({ -137.5f, 150 }, { 250, 75 }), "PROCEED"
 	});
 	win_overlay.add_button({
 		[this]() {
-			exit();
+			change = LevelChange::MainMenu;
 		},
 		GuiBox::floating_x({ 137.5f, 150 }, { 250, 75 }), "MAIN MENU"
 	});
@@ -161,33 +156,33 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 pla
 	} else {
 		win_overlay.add_button({
 			[this]() {
-				transition.next = Levels::make_level(this->level_nr - 1);
+				change = LevelChange::Prev;
 			},
 			win_prev_box, win_prev_txt
 		});
 	}
 	win_overlay.add_button({
 		[this]() {
-			full_reset();
+			change = LevelChange::Reset;
 		},
 		GuiBox::floating_x({ 0, 350 }, { 525, 75 }), "RESTART LEVEL"
 	});
 
 	reset_action = Action::Reset.register_cb([this]() {
-		full_reset();
+		change = LevelChange::Reset;
 	});
 	next_level_action = Action::NextLevel.register_cb([this]() {
 		if (state == LevelState::WinScreen) {
-			transition.next = Levels::make_level(this->level_nr+1);
-			if (transition.next == nullptr) {
-				transition.next = std::make_unique<MainMenu>();
-			}
+			change = LevelChange::Next;
 		}
 	});
 }
 
 Vector2 Level::get_offset() const {
 	return { -w/2.0f, -float(h) };
+}
+int Level::get_level_nr() const {
+	return level_nr;
 }
 
 static std::vector<Tile> tilemap_of(Image image) {
@@ -197,7 +192,7 @@ static std::vector<Tile> tilemap_of(Image image) {
 	using namespace Levels;
 	for (int y = 0; y < image.height; ++y) {
 		for (int x = 0; x < image.width; ++x) {
-	const auto color = GetImageColor(image, x, y);
+			const auto color = GetImageColor(image, x, y);
 			for (int i = 0; i < int(sizeof(colormap)/sizeof(*colormap)); ++i) {
 				const auto r = colormap[i].color.r == color.r;
 				const auto g = colormap[i].color.g == color.g;
@@ -236,17 +231,11 @@ Vector2 Level::get_player_spawn() const {
 	return { player_spawn.x + offset.x + 0.5f, player_spawn.y + offset.y };
 }
 
-void Level::reset() {
+void Level::respawn_player() {
 	player->reset(get_player_spawn());
 }
-void Level::full_reset() {
-	transition.next = Levels::make_level(level_nr);
-}
-void Level::complete() {
+void Level::display_win_overlay() {
 	state = LevelState::WinScreen;
-}
-void Level::exit() {
-	transition.next = std::make_unique<MainMenu>();
 }
 
 Rectangle Level::get_collider(float x, float y) const {

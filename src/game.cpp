@@ -50,5 +50,6 @@ void Game::draw() const {
 	EndDrawing();
 }
 void Game::update_scene() {
+	scene->post_draw();
 	if (scene->transition.next) set_scene(std::move(scene->transition.next));
 }

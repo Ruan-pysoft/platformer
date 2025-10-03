@@ -100,6 +100,7 @@ HPP(gui);
 HPP(globals);
 HPP(input_manager);
 HPP(level);
+HPP(level_scene);
 HPP(level_select);
 HPP(levels_list);
 HPP(main_menu);
@@ -117,17 +118,19 @@ HEADERS(player, actions_hpp, level_hpp, util_hpp);
 HEADERS(input_manager);
 HEADERS(actions, input_manager_hpp);
 HEADERS(level,
-	actions_hpp, globals_hpp, gui_hpp, levels_list_hpp, main_menu_hpp,
-	player_hpp, scene_hpp
+	actions_hpp, globals_hpp, gui_hpp, levels_list_hpp, player_hpp
 );
 HEADERS(main_menu,
-	globals_hpp, gui_hpp, level_select_hpp, levels_list_hpp, scene_hpp
+	globals_hpp, gui_hpp, level_scene_hpp, level_select_hpp, scene_hpp
 );
 HEADERS(levels_list, level_hpp);
 HEADERS(gui, globals_hpp);
-HEADERS(level_select, gui_hpp, levels_list_hpp, main_menu_hpp, scene_hpp);
+HEADERS(level_select,
+	gui_hpp, level_scene_hpp, levels_list_hpp, main_menu_hpp, scene_hpp
+);
 HEADERS(config);
 HEADERS(util);
+HEADERS(level_scene, level_hpp, levels_list_hpp, main_menu_hpp, scene_hpp);
 
 // most files in the project exists in src/name.cpp, outputs to build/name.o,
 // and depends on the headers defined in name_headers
@@ -154,6 +157,7 @@ struct Target {
 	STANDARD_FILE(level_select),
 	STANDARD_FILE(config),
 	STANDARD_FILE(util),
+	STANDARD_FILE(level_scene),
 };
 
 // check if a particular file needs rebuilding

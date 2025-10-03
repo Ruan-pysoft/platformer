@@ -6,6 +6,7 @@
 #include "raylib.h"
 
 #include "globals.hpp"
+
 struct GuiBox {
 	Vector2 pos;
 	Vector2 size;
