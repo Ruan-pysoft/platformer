@@ -83,6 +83,9 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h,
 	}
 	pause_overlay.add_button({
 		[this]() {
+			if (this->continuous && state == LevelState::WinScreen) {
+				return;
+			}
 			change = LevelChange::Reset;
 		},
 		GuiBox::floating_x(
@@ -90,42 +93,34 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h,
 		), "RESTART LEVEL"
 	});
 
+	win_overlay.add_text({ "Level completed", 50, { 0, 12.5 }, true, BLACK });
+	win_overlay.add_text({ "", 24, { 0, 75 }, true, BLACK });
+	win_overlay.add_text({ "", 24, { -100, 100 }, true, BLACK });
+	win_overlay.add_text({ "", 24, { 100, 100 }, true, BLACK });
+
+
 	if (continuous) {
-		win_overlay.add_text({ "Level completed", 50, { 0, 12.5 }, true, BLACK });
-		win_overlay.add_text({ "", 24, { 0, 75 }, true, BLACK });
-		win_overlay.add_text({ "", 24, { -100, 100 }, true, BLACK });
-		win_overlay.add_text({ "", 24, { 100, 100 }, true, BLACK });
-
-
 		win_overlay.add_button({
 			[this]() {
 				change = LevelChange::Next;
 			},
 			GuiBox::floating_x({ -137.5f, 150 }, { 250, 75 }), "CONTINUE"
 		});
-		win_overlay.add_button({
-			[this]() {
-				change = LevelChange::MainMenu;
-			},
-			GuiBox::floating_x({ 137.5f, 150 }, { 250, 75 }), "MAIN MENU"
-		});
 	} else {
-		win_overlay.add_text({ "You won!", 50, { 0, 12.5 }, true, BLACK });
-		win_overlay.add_text({ "", 24, { 0, 75 }, true, BLACK });
-		win_overlay.add_text({ "", 24, { 0, 100 }, true, BLACK });
-
 		win_overlay.add_button({
 			[this]() {
 				change = LevelChange::Next;
 			},
 			GuiBox::floating_x({ -137.5f, 150 }, { 250, 75 }), "PROCEED"
 		});
-		win_overlay.add_button({
-			[this]() {
-				change = LevelChange::MainMenu;
-			},
-			GuiBox::floating_x({ 137.5f, 150 }, { 250, 75 }), "MAIN MENU"
-		});
+	}
+	win_overlay.add_button({
+		[this]() {
+			change = LevelChange::MainMenu;
+		},
+		GuiBox::floating_x({ 137.5f, 150 }, { 250, 75 }), "MAIN MENU"
+	});
+	if (!continuous) {
 		const auto win_prev_box = GuiBox::floating_x({ 0, 250 }, { 525, 75 });
 		const auto win_prev_txt = "PREVIOUS LEVEL";
 		if (level_nr == 0) {
@@ -280,13 +275,11 @@ void Level::update(float dt) {
 				jumps_text->text = "Total jumps: ";
 				jumps_text->text += std::to_string(stats.jumps + stats.double_jumps);
 			}
-			if (continuous) {
-				Text *deaths_text = win_overlay.get_text(3);
-				if (deaths_text->text.size() == 0) {
-					const Player::Stats stats = player->get_stats();
-					deaths_text->text = "Total deaths: ";
-					deaths_text->text += std::to_string(stats.deaths);
-				}
+			Text *deaths_text = win_overlay.get_text(3);
+			if (deaths_text->text.size() == 0) {
+				const Player::Stats stats = player->get_stats();
+				deaths_text->text = "Total deaths: ";
+				deaths_text->text += std::to_string(stats.deaths);
 			}
 
 			win_overlay.update(dt);
