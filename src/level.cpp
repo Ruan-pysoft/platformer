@@ -1,5 +1,6 @@
 #include "level.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -338,14 +339,51 @@ void Level::draw() const {
 	player->draw(frame_acc * global::PHYSICS_FPS);
 
 	const auto offset = get_offset();
-	for (int y = 0; y < h; ++y) {
-		for (int x = 0; x < w; ++x) {
+
+	const float viewport_width = global::WINDOW_WIDTH / camera.zoom;
+	const float viewport_height = global::WINDOW_HEIGHT / camera.zoom;
+	const float viewport_left = camera.target.x + - offset.x - viewport_width/2.f;
+	const float viewport_right = camera.target.x - offset.x + viewport_width/2.f;
+	const float viewport_top = camera.target.y - offset.y - viewport_height/2.f;
+	const float viewport_bottom = camera.target.y - offset.y + viewport_height/2.f;
+
+	const float min_fade_dist = 1;
+	const float max_fade_dist = 5;
+	const float min_units = 32;
+	const float max_units = 64;
+	const float units = std::min(viewport_right - viewport_left, viewport_bottom - viewport_top);
+	const float fade_lerp = std::max(0.f, std::min(1.f, (units - min_units)/(max_units - min_units)));
+	const float fade_dist = min_fade_dist + fade_lerp*(max_fade_dist - min_fade_dist);
+
+	const int y_min = std::max(viewport_top, 0.f);
+	const int y_max = std::min(viewport_bottom, float(h-1));
+	const int x_min = std::max(viewport_left, 0.f);
+	const int x_max = std::min(viewport_right, float(w-1));
+
+	for (int y = y_min; y <= y_max; ++y) {
+		for (int x = x_min; x <= x_max; ++x) {
 			const Vector2 pos = { x + offset.x, y + offset.y };
 			const Vector2 size = { 1, 1 };
-			DrawRectangleV(
-				pos, size,
-				tiles[x + y*w].color
-			);
+
+			const float y_dist = std::min(y + size.y - viewport_top, viewport_bottom - y);
+			const float x_dist = std::min(x + size.x - viewport_left, viewport_right - x);
+			const float dist = std::min(x_dist, y_dist);
+
+			if (dist < fade_dist) {
+				const float factor = dist / fade_dist;
+				const float adj = (1 - factor)/2;
+				const auto color = tiles[x + y*w].color;
+				DrawRectangleV(
+					{ pos.x + size.x*adj, pos.y + size.y*adj },
+					{ size.x*factor, size.y*factor },
+					{ color.r, color.g, color.b, uint8_t(color.a*factor) }
+				);
+			} else {
+				DrawRectangleV(
+					pos, size,
+					tiles[x + y*w].color
+				);
+			}
 		}
 	}
 
