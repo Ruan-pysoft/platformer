@@ -55,7 +55,7 @@ private:
 	Stats stats;
 
 	static constexpr Vector2 size = Vector2 { 1.0f, 2.0f };
-	static constexpr float jump_vel = 13.25; // old vel is 13, makes some double jumps harder
+	static constexpr float jump_vel = 13; // set to 13.25 for much easier 8-block double jumps
 	static constexpr float walk_acc = 16;
 	static constexpr float walk_dec = 32;
 	static constexpr float walk_vel = 20;
