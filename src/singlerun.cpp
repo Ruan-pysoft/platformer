@@ -54,7 +54,6 @@ void SingleRun::reset_level() {
 	const int curr = level->get_level_nr();
 	total_stats.accumulate(level->get_stats());
 	total_player_stats.accumulate(level->get_player_stats());
-	--total_player_stats.times_spawned;
 
 	level = Levels::make_level(curr, true);
 }
