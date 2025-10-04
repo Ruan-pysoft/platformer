@@ -9,6 +9,16 @@
 #include "main_menu.hpp"
 #include "scene.hpp"
 
+#ifdef DEBUG
+#define FPS_BUFFER_SIZE (1 << 8)
+#define FPS_BUFFER_PERIOD 5.0f
+#define FRAME_WIDTH (FPS_BUFFER_PERIOD / FPS_BUFFER_SIZE)
+
+float fps_buffer[FPS_BUFFER_SIZE] = {};
+int fps_buffer_start = 0;
+const int fps_draw_height = 100;
+#endif /* DEBUG */
+
 Game::Game() {
 	set_scene(std::make_unique<MainMenu>());
 }
@@ -31,6 +41,26 @@ void Game::set_scene(std::unique_ptr<Scene> new_scene) {
 void Game::update() {
 	const float dt = GetFrameTime();
 
+#ifdef DEBUG
+	static float acc_dt = 0;
+	static int acc_frames = 0;
+
+	acc_dt += GetFrameTime();
+	++acc_frames;
+
+	if (acc_dt >= FRAME_WIDTH) {
+		const int frames = acc_dt / FRAME_WIDTH;
+		const float fps = acc_frames / acc_dt;
+		for (int i = 0; i < frames; ++i) {
+			const int fps_buffer_idx = (fps_buffer_start + i)&(FPS_BUFFER_SIZE-1);
+			fps_buffer[fps_buffer_idx] = fps;
+		}
+		fps_buffer_start += frames;
+		acc_dt = 0;
+		acc_frames = 0;
+	}
+#endif /* DEBUG */
+
 	scene->update(dt);
 }
 void Game::draw() const {
@@ -46,6 +76,26 @@ void Game::draw() const {
 		global::WINDOW_WIDTH - fps_maxwidth - fps_margin,
 		global::WINDOW_HEIGHT - fps_height - fps_margin
 	);
+
+#ifdef DEBUG
+	float max_fps = 0.01f;
+	for (int i = 0; i < FPS_BUFFER_SIZE; ++i) {
+		max_fps = std::max(max_fps, fps_buffer[i]);
+	}
+
+	for (int i = 0; i < FPS_BUFFER_SIZE; ++i) {
+		const int fps_buffer_idx = (fps_buffer_start + i)&(FPS_BUFFER_SIZE-1);
+		const int x = i + 10;
+		const int y = global::WINDOW_HEIGHT - fps_draw_height - 10;
+		const int height = fps_buffer[fps_buffer_idx] * fps_draw_height / max_fps;
+
+		if (height) DrawLine(
+			x, y + fps_draw_height - height,
+			x, y + fps_draw_height - 1,
+			{ 0, 255, 0, 127 }
+		);
+	}
+#endif /* DEBUG */
 
 	EndDrawing();
 }

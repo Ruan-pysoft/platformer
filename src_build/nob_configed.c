@@ -253,6 +253,10 @@ bool build_game(void) {
 		cmd_append(&cmd, "-o", targets[i].obj);
 		cmd_append(&cmd, targets[i].src);
 
+#ifndef RELEASE
+		cmd_append(&cmd, "-DDEBUG");
+#endif
+
 		// and build asynchronously, by default the number of threads
 		// is the number of processors on the machine (which might be
 		// threads or might be cores, depending on OS, iirc)
