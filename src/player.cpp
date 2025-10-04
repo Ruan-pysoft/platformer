@@ -117,6 +117,9 @@ void Player::resolve_collisions_x(Level &level) {
 					level_completed = true;
 				} break;
 				case TileType::Empty: break;
+				case TileType::Checkpoint: {
+					level.activate_checkpoint(check_point.x, check_point.y);
+				} break;
 			}
 		}
 	}
@@ -163,6 +166,9 @@ void Player::resolve_collisions_y(Level &level) {
 					level_completed = true;
 				} break;
 				case TileType::Empty: break;
+				case TileType::Checkpoint: {
+					level.activate_checkpoint(check_point.x, check_point.y);
+				} break;
 			}
 		}
 	}

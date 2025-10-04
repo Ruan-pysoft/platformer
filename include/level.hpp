@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -10,15 +11,17 @@
 #include "overlay.hpp"
 #include "player.hpp"
 
-enum class TileType { Empty, Solid, Danger, Goal };
+enum class TileType { Empty, Solid, Danger, Goal, Checkpoint };
 
 struct Tile {
-	constexpr Tile() : type(TileType::Empty), color(Color { 0, 0, 0, 0 }) {}
-	constexpr Tile(Color color) : type(TileType::Solid), color(color) {}
-	constexpr Tile(Color color, TileType type) : type(type), color(color) {}
+	constexpr Tile() : type(TileType::Empty), color(Color { 0, 0, 0, 0 }), in_front(false) {}
+	constexpr Tile(Color color) : type(TileType::Solid), color(color), in_front(false) {}
+	constexpr Tile(Color color, TileType type) : type(type), color(color), in_front(false) {}
+	constexpr Tile(Color color, TileType type, bool in_front) : type(type), color(color), in_front(in_front) {}
 
 	TileType type;
 	Color color;
+	bool in_front;
 };
 
 class Level;
@@ -59,6 +62,7 @@ private:
 	float frame_acc = 0;
 	Stats stats {};
 	bool continuous = false;
+	std::optional<Vector2> active_checkpoint = {};
 
 	ActionOnce::cb_handle_t reset_action;
 	ActionOnce::cb_handle_t next_level_action;
@@ -102,6 +106,7 @@ public:
 
 	Rectangle get_collider(float x, float y) const;
 	TileType get_tile_type(float x, float y) const;
+	void activate_checkpoint(float x, float y);
 
 	void update(float dt);
 	void draw() const;
@@ -112,9 +117,10 @@ namespace Levels {
 static constexpr Tile floor = Tile(BLACK);
 static constexpr Tile air = Tile();
 static constexpr Tile wall = Tile(BROWN);
-static constexpr Tile ghost = Tile({ 195, 195, 255, 127 }, TileType::Empty);
+static constexpr Tile ghost = Tile({ 195, 195, 255, 127 }, TileType::Empty, true);
 static constexpr Tile flag = Tile({ 0, 255, 0, 255 }, TileType::Goal);
 static constexpr Tile lava = Tile({ 255, 63, 15, 255 }, TileType::Danger);
+static constexpr Tile checkpoint = Tile({ 15, 195, 195, 255 }, TileType::Checkpoint);
 
 static constexpr struct {
 	Color color;
@@ -126,6 +132,7 @@ static constexpr struct {
 	{ { 195, 195, 255, 255 }, ghost },
 	{ { 0, 255, 0, 255 },     flag },
 	{ { 255, 0, 0, 255 },     lava },
+	{ { 15, 195, 195, 255 },  checkpoint },
 };
 
 }

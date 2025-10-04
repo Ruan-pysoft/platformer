@@ -252,6 +252,16 @@ TileType Level::get_tile_type(float x, float y) const {
 	}
 	return tiles[lvl_x + lvl_y*w].type;
 }
+void Level::activate_checkpoint(float x, float y) {
+	const auto offset = get_offset();
+	const int lvl_x = x - offset.x;
+	const int lvl_y = y - offset.y;
+	if (lvl_x < 0 || lvl_x >= w || lvl_y < 0 || lvl_y >= h) {
+		return;
+	}
+	active_checkpoint = { float(lvl_x), float(lvl_y) };
+	player_spawn = { float(lvl_x), lvl_y + 1.f };
+}
 
 void Level::update(float dt) {
 	switch (state) {
@@ -329,9 +339,8 @@ void Level::draw() const {
 
 	BeginMode2D(camera);
 
-	player->draw(frame_acc * global::PHYSICS_FPS);
-
 	const auto offset = get_offset();
+	std::vector<std::pair<Rectangle, Color>> draw_after {};
 
 	const float viewport_width = global::WINDOW_WIDTH / camera.zoom;
 	const float viewport_height = global::WINDOW_HEIGHT / camera.zoom;
@@ -362,22 +371,34 @@ void Level::draw() const {
 			const float x_dist = std::min(x + size.x - viewport_left, viewport_right - x);
 			const float dist = std::min(x_dist, y_dist);
 
-			if (dist < fade_dist) {
-				const float factor = dist / fade_dist;
-				const float adj = (1 - factor)/2;
-				const auto color = tiles[x + y*w].color;
-				DrawRectangleV(
-					{ pos.x + size.x*adj, pos.y + size.y*adj },
-					{ size.x*factor, size.y*factor },
-					{ color.r, color.g, color.b, uint8_t(color.a*factor) }
-				);
+			const float factor = dist < fade_dist ? dist / fade_dist : 1;
+			const float adj = (1 - factor)/2;
+			const auto color = tiles[x + y*w].color;
+
+			const Rectangle rect = {
+				pos.x + size.x*adj, pos.y + size.y*adj,
+				size.x*factor, size.y*factor
+			};
+
+			if (tiles[x + y*w].in_front) {
+				draw_after.push_back(std::make_pair(rect, color));
 			} else {
-				DrawRectangleV(
-					pos, size,
-					tiles[x + y*w].color
-				);
+				DrawRectangleRec(rect, color);
 			}
 		}
+	}
+
+	if (active_checkpoint.has_value()) {
+		DrawPoly({
+			offset.x + active_checkpoint->x + 0.5f,
+			offset.y + active_checkpoint->y + 0.5f,
+		}, 4, 0.5f, 0, { 127, 255, 127, 195 });
+	}
+
+	player->draw(frame_acc * global::PHYSICS_FPS);
+
+	for (const auto &e : draw_after) {
+		DrawRectangleRec(e.first, e.second);
 	}
 
 	EndMode2D();
