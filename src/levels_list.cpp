@@ -23,10 +23,15 @@ const std::vector<LevelInfo> levels = {
 };
 
 std::unique_ptr<Level> make_level(size_t idx) {
+	return make_level(idx, false);
+}
+std::unique_ptr<Level> make_level(size_t idx, bool continuous) {
 	if (idx >= levels.size()) return nullptr;
 
 	const auto level_img = LoadImage(levels[idx].filename.c_str());
-	auto res = std::make_unique<Level>(idx, level_img, levels[idx].spawn);
+	auto res = std::make_unique<Level>(
+		idx, level_img, levels[idx].spawn, continuous
+	);
 	res->add_texts(levels[idx].texts);
 	UnloadImage(level_img);
 	return res;

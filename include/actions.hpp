@@ -114,7 +114,6 @@ static const struct {
 	ActionOnce &action;
 	bool on_press;
 } INIT_KEYMAP_ONCE[] = {
-	{ KEY_SPACE, DoubleJump, true },
 	{ KEY_W, DoubleJump, true },
 	{ KEY_UP, DoubleJump, true },
 	{ KEY_K, DoubleJump, true },
@@ -122,6 +121,7 @@ static const struct {
 	{ KEY_R, Reset, true },
 	{ KEY_ESCAPE, Pause, true },
 	{ KEY_ENTER, NextLevel, true },
+	{ KEY_SPACE, NextLevel, true },
 };
 
 static const struct {
@@ -140,7 +140,6 @@ static const struct {
 	{ KEY_D, Right },
 	{ KEY_RIGHT, Right },
 	{ KEY_L, Right },
-	{ KEY_SPACE, Jump },
 	{ KEY_W, Jump },
 	{ KEY_UP, Jump },
 	{ KEY_K, Jump },

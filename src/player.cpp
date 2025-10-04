@@ -167,6 +167,8 @@ void Player::resolve_collisions_y(Level &level) {
 }
 
 Vector2 Player::get_pos(float interp) const {
+	if (interp <= 0) return prev_pos;
+	if (interp >= 1) return pos;
 	return {
 		prev_pos.x*(1 - interp) + pos.x*interp,
 		prev_pos.y*(1 - interp) + pos.y*interp,

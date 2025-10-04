@@ -9,6 +9,7 @@ class LevelSelect : public Scene {
 	Text heading;
 	std::vector<Button> level_buttons;
 	Button menu;
+	Button single_run;
 
 public:
 	LevelSelect();

@@ -2,13 +2,13 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "raylib.h"
 
 #include "actions.hpp"
-#include "gui.hpp"
+#include "overlay.hpp"
+#include "player.hpp"
 
 enum class TileType { Empty, Solid, Danger, Goal };
 
@@ -33,26 +33,17 @@ struct LevelText {
 enum class LevelState { Active, Paused, WinScreen };
 enum class LevelChange { None, Prev, Next, Reset, MainMenu };
 
-class Player;
 class Level {
-	class Overlay {
-		Level &level;
+public:
+	struct Stats {
+		int level_ticks = 0;
 
-		std::vector<std::pair<Text, bool>> text;
-		std::vector<Button> buttons;
-	public:
-		Overlay(Level &level);
-
-		Overlay &add_text(Text text, bool centered);
-		Overlay &add_button(Button button);
-
-		Text *get_text(size_t ix);
-		Button *get_button(size_t ix);
-
-		void update(float dt);
-		void draw() const;
+		void accumulate(const Stats &other) {
+			level_ticks += other.level_ticks;
+		}
 	};
 
+private:
 	const std::vector<Tile> tiles;
 	int w, h;
 	std::unique_ptr<Player> player;
@@ -60,13 +51,14 @@ class Level {
 	Camera2D camera;
 	size_t level_nr;
 	std::vector<LevelText> texts = {};
-	int level_ticks = 0;
 	float camera_move_time = 0;
 	LevelState state = LevelState::Active;
 	ActionOnce::cb_handle_t pause_action;
 	Overlay pause_overlay;
 	Overlay win_overlay;
 	float frame_acc = 0;
+	Stats stats {};
+	bool continuous = false;
 
 	ActionOnce::cb_handle_t reset_action;
 	ActionOnce::cb_handle_t next_level_action;
@@ -75,16 +67,32 @@ class Level {
 	const float camera_follow = 0.5f;
 	const float camera_min_move_time = 0.25;
 
-	Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 player_spawn);
+	Level(
+		size_t level_nr, std::vector<Tile> tiles, int w, int h,
+		Vector2 player_spawn, bool continuous
+	);
 public:
 	float gravity = 20;
 	LevelChange change = LevelChange::None;
 
 	Vector2 get_offset() const;
 	int get_level_nr() const;
+	Stats get_stats() const;
+	Player::Stats get_player_stats() const;
 
-	Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_spawn);
+	Level(
+		size_t level_nr, const Tile *tilemap, int w, int h,
+		Vector2 player_spawn, bool continuous
+	);
+	Level(
+		size_t level_nr, const Tile *tilemap, int w, int h,
+		Vector2 player_spawn
+	);
 	Level(size_t level_nr, Image image, Vector2 player_spawn);
+	Level(
+		size_t level_nr, Image image, Vector2 player_spawn,
+		bool continuous
+	);
 	void add_texts(std::vector<LevelText> texts);
 	~Level();
 	Vector2 get_player_spawn() const;

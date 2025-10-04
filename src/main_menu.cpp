@@ -29,8 +29,6 @@ MainMenu::MainMenu()
 { }
 
 void MainMenu::update(float dt) {
-	title.pos.x = global::WINDOW_WIDTH / 2.0f;
-
 	play.update(dt);
 	level_select.update(dt);
 	quit.update(dt);

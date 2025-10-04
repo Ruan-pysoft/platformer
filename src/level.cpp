@@ -24,53 +24,11 @@ void LevelText::draw(const Level &level, const Camera2D &camera) const {
 	DrawTextEx(GetFontDefault(), text.c_str(), scr_pos, font_size, spacing, color);
 }
 
-Level::Overlay::Overlay(Level &level) : level(level), text{}, buttons{} { }
-
-Level::Overlay &Level::Overlay::add_text(Text text, bool centered) {
-	this->text.push_back(std::make_pair(text, centered));
-
-	return *this;
-}
-Level::Overlay &Level::Overlay::add_button(Button button) {
-	buttons.push_back(button);
-
-	return *this;
-}
-Text *Level::Overlay::get_text(size_t ix) {
-	if (ix > text.size()) return nullptr;
-	return &text[ix].first;
-}
-Button *Level::Overlay::get_button(size_t ix) {
-	if (ix > buttons.size()) return nullptr;
-	return &buttons[ix];
-}
-
-void Level::Overlay::update(float dt) {
-	for (auto &e : text) {
-		if (e.second) e.first.pos.x = global::WINDOW_WIDTH / 2.0f;
-	}
-	for (auto &e : buttons) {
-		e.update(dt);
-	}
-}
-void Level::Overlay::draw() const {
-	DrawRectangle(
-		0, 0, global::WINDOW_WIDTH, global::WINDOW_HEIGHT,
-		{ 195, 195, 255, 127 }
-	);
-
-	for (auto &e : text) {
-		e.first.draw();
-	}
-	for (auto &e : buttons) {
-		e.draw();
-	}
-}
-
-Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 player_spawn)
+Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h,
+	     Vector2 player_spawn, bool continuous)
 : tiles(tiles), w(w), h(h), player(std::make_unique<Player>()),
   player_spawn { player_spawn.x, h + player_spawn.y }, level_nr(level_nr),
-  pause_overlay(*this), win_overlay(*this)
+  pause_overlay(), win_overlay(), continuous(continuous)
 {
 	player->reset(get_player_spawn());
 
@@ -93,7 +51,7 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 pla
 	Text pause_text = { "", 50, { 0, 12.5 }, true, BLACK };
 	pause_text.text += "Paused - Level ";
 	pause_text.text += std::to_string(level_nr + 1);
-	pause_overlay.add_text(pause_text, true);
+	pause_overlay.add_text(pause_text);
 	pause_overlay.add_button({
 		[this]() {
 			state = LevelState::Active;
@@ -108,13 +66,13 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 pla
 	});
 	const auto pause_prev_box = GuiBox::floating_x({ 0, 200 }, { 525, 75 });
 	const auto pause_prev_txt = "PREVIOUS LEVEL";
-	if (level_nr == 0) {
+	if (!continuous && level_nr == 0) {
 		pause_overlay.add_button({
 			[]() {}, pause_prev_box, pause_prev_txt,
 			Button::DEFAULT_TEXT_SIZE, LIGHTGRAY, LIGHTGRAY,
 			Button::DEFAULT_TEXT_COLOR
 		});
-	} else {
+	} else if (!continuous) {
 		pause_overlay.add_button({
 			[this]() {
 				change = LevelChange::Prev;
@@ -126,47 +84,70 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h, Vector2 pla
 		[this]() {
 			change = LevelChange::Reset;
 		},
-		GuiBox::floating_x({ 0, 300 }, { 525, 75 }), "RESTART LEVEL"
+		GuiBox::floating_x(
+			{ 0, continuous ? 200.0f : 300.0f }, { 525, 75 }
+		), "RESTART LEVEL"
 	});
 
-	win_overlay.add_text({ "You won!", 50, { 0, 12.5 }, true, BLACK }, true);
-	win_overlay.add_text({ "", 24, { 0, 75 }, true, BLACK }, true);
-	win_overlay.add_text({ "", 24, { 0, 100 }, true, BLACK }, true);
+	if (continuous) {
+		win_overlay.add_text({ "Level completed", 50, { 0, 12.5 }, true, BLACK });
+		win_overlay.add_text({ "", 24, { 0, 75 }, true, BLACK });
+		win_overlay.add_text({ "", 24, { -100, 100 }, true, BLACK });
+		win_overlay.add_text({ "", 24, { 100, 100 }, true, BLACK });
 
-	win_overlay.add_button({
-		[this]() {
-			change = LevelChange::Next;
-		},
-		GuiBox::floating_x({ -137.5f, 150 }, { 250, 75 }), "PROCEED"
-	});
-	win_overlay.add_button({
-		[this]() {
-			change = LevelChange::MainMenu;
-		},
-		GuiBox::floating_x({ 137.5f, 150 }, { 250, 75 }), "MAIN MENU"
-	});
-	const auto win_prev_box = GuiBox::floating_x({ 0, 250 }, { 525, 75 });
-	const auto win_prev_txt = "PREVIOUS LEVEL";
-	if (level_nr == 0) {
-		win_overlay.add_button({
-			[]() {}, win_prev_box, win_prev_txt,
-			Button::DEFAULT_TEXT_SIZE, LIGHTGRAY, LIGHTGRAY,
-			Button::DEFAULT_TEXT_COLOR
-		});
-	} else {
+
 		win_overlay.add_button({
 			[this]() {
-				change = LevelChange::Prev;
+				change = LevelChange::Next;
 			},
-			win_prev_box, win_prev_txt
+			GuiBox::floating_x({ -137.5f, 150 }, { 250, 75 }), "CONTINUE"
+		});
+		win_overlay.add_button({
+			[this]() {
+				change = LevelChange::MainMenu;
+			},
+			GuiBox::floating_x({ 137.5f, 150 }, { 250, 75 }), "MAIN MENU"
+		});
+	} else {
+		win_overlay.add_text({ "You won!", 50, { 0, 12.5 }, true, BLACK });
+		win_overlay.add_text({ "", 24, { 0, 75 }, true, BLACK });
+		win_overlay.add_text({ "", 24, { 0, 100 }, true, BLACK });
+
+		win_overlay.add_button({
+			[this]() {
+				change = LevelChange::Next;
+			},
+			GuiBox::floating_x({ -137.5f, 150 }, { 250, 75 }), "PROCEED"
+		});
+		win_overlay.add_button({
+			[this]() {
+				change = LevelChange::MainMenu;
+			},
+			GuiBox::floating_x({ 137.5f, 150 }, { 250, 75 }), "MAIN MENU"
+		});
+		const auto win_prev_box = GuiBox::floating_x({ 0, 250 }, { 525, 75 });
+		const auto win_prev_txt = "PREVIOUS LEVEL";
+		if (level_nr == 0) {
+			win_overlay.add_button({
+				[]() {}, win_prev_box, win_prev_txt,
+				Button::DEFAULT_TEXT_SIZE, LIGHTGRAY, LIGHTGRAY,
+				Button::DEFAULT_TEXT_COLOR
+			});
+		} else {
+			win_overlay.add_button({
+				[this]() {
+					change = LevelChange::Prev;
+				},
+				win_prev_box, win_prev_txt
+			});
+		}
+		win_overlay.add_button({
+			[this]() {
+				change = LevelChange::Reset;
+			},
+			GuiBox::floating_x({ 0, 350 }, { 525, 75 }), "RESTART LEVEL"
 		});
 	}
-	win_overlay.add_button({
-		[this]() {
-			change = LevelChange::Reset;
-		},
-		GuiBox::floating_x({ 0, 350 }, { 525, 75 }), "RESTART LEVEL"
-	});
 
 	reset_action = Action::Reset.register_cb([this]() {
 		change = LevelChange::Reset;
@@ -183,6 +164,12 @@ Vector2 Level::get_offset() const {
 }
 int Level::get_level_nr() const {
 	return level_nr;
+}
+Level::Stats Level::get_stats() const {
+	return stats;
+}
+Player::Stats Level::get_player_stats() const {
+	return player->get_stats();
 }
 
 static std::vector<Tile> tilemap_of(Image image) {
@@ -212,11 +199,20 @@ static std::vector<Tile> tilemap_of(Image image) {
 	return tiles;
 }
 
-Level::Level(size_t level_nr, const Tile *tilemap, int w, int h, Vector2 player_spawn)
-: Level(level_nr, { tilemap, tilemap + w*h }, w, h, player_spawn)
+Level::Level(size_t level_nr, const Tile *tilemap, int w, int h,
+	     Vector2 player_spawn)
+: Level(level_nr, tilemap, w, h, player_spawn, false)
+{ }
+Level::Level(size_t level_nr, const Tile *tilemap, int w, int h,
+	     Vector2 player_spawn, bool continuous)
+: Level(level_nr, { tilemap, tilemap + w*h }, w, h, player_spawn, continuous)
 { }
 Level::Level(size_t level_nr, Image image, Vector2 player_spawn)
-: Level(level_nr, tilemap_of(image), image.width, image.height, player_spawn)
+: Level(level_nr, image, player_spawn, false)
+{ }
+Level::Level(size_t level_nr, Image image, Vector2 player_spawn,
+	     bool continuous)
+: Level(level_nr, tilemap_of(image), image.width, image.height, player_spawn, continuous)
 { }
 void Level::add_texts(std::vector<LevelText> texts) {
 	for (const auto &text : texts) {
@@ -270,8 +266,8 @@ void Level::update(float dt) {
 			Text *time_text = win_overlay.get_text(1);
 			if (time_text->text.size() == 0) {
 				time_text->text = "Completion time: ";
-				const int seconds = level_ticks / global::PHYSICS_FPS;
-				const int frames = level_ticks % global::PHYSICS_FPS;
+				const int seconds = stats.level_ticks / global::PHYSICS_FPS;
+				const int frames = stats.level_ticks % global::PHYSICS_FPS;
 				time_text->text += std::to_string(seconds);
 				time_text->text += ";";
 				if (frames < 10) time_text->text += "0";
@@ -282,6 +278,14 @@ void Level::update(float dt) {
 				const Player::Stats stats = player->get_stats();
 				jumps_text->text = "Total jumps: ";
 				jumps_text->text += std::to_string(stats.jumps + stats.double_jumps);
+			}
+			if (continuous) {
+				Text *deaths_text = win_overlay.get_text(3);
+				if (deaths_text->text.size() == 0) {
+					const Player::Stats stats = player->get_stats();
+					deaths_text->text = "Total deaths: ";
+					deaths_text->text += std::to_string(stats.deaths);
+				}
 			}
 
 			win_overlay.update(dt);
@@ -295,7 +299,7 @@ void Level::update(float dt) {
 	const bool physics_tick = frame_acc >= 1.0f/global::PHYSICS_FPS;
 	if (physics_tick) {
 		frame_acc -= 1.0f/global::PHYSICS_FPS;
-		++level_ticks;
+		++stats.level_ticks;
 
 		player->update(*this);
 	}
@@ -356,8 +360,8 @@ void Level::draw() const {
 	DrawText(level_display.c_str(), 10, 10, level_display_height, BLACK);
 
 	std::string level_time_str = "";
-	const int seconds = level_ticks / global::PHYSICS_FPS;
-	const int frames = level_ticks % global::PHYSICS_FPS;
+	const int seconds = stats.level_ticks / global::PHYSICS_FPS;
+	const int frames = stats.level_ticks % global::PHYSICS_FPS;
 	level_time_str += std::to_string(seconds);
 	level_time_str += ";";
 	if (frames < 10) level_time_str += "0";

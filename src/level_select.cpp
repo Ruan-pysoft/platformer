@@ -8,6 +8,7 @@
 #include "level_scene.hpp"
 #include "levels_list.hpp"
 #include "main_menu.hpp"
+#include "singlerun.hpp"
 
 LevelSelect::LevelSelect()
 : heading { "Levels", 50, { 0, 10 }, true, GRAY },
@@ -16,7 +17,12 @@ LevelSelect::LevelSelect()
 	[this]() {
 		transition.next = std::make_unique<MainMenu>();
 	},
-	GuiBox::floating_x({ 0, 75 }, { 300, 75 }), "BACK"
+	GuiBox::floating_x({ -175, 75 }, { 300, 75 }), "BACK"
+  }, single_run {
+	[this]() {
+		transition.next = std::make_unique<SingleRun>();
+	},
+	GuiBox::floating_x({ 175, 75 }, { 300, 75 }), "CHALLENGE"
   }
 {
 	const float level_btn_size = 50;
@@ -60,12 +66,11 @@ LevelSelect::LevelSelect()
 }
 
 void LevelSelect::update(float dt) {
-	heading.pos.x = global::WINDOW_WIDTH / 2.0f;
-
 	for (auto &level_btn : level_buttons) {
 		level_btn.update(dt);
 	}
 	menu.update(dt);
+	single_run.update(dt);
 }
 void LevelSelect::draw() const {
 	ClearBackground(RAYWHITE);
@@ -76,4 +81,5 @@ void LevelSelect::draw() const {
 		level_btn.draw();
 	}
 	menu.draw();
+	single_run.draw();
 }

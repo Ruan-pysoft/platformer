@@ -19,5 +19,6 @@ struct LevelInfo {
 extern const std::vector<LevelInfo> levels;
 
 std::unique_ptr<Level> make_level(size_t idx);
+std::unique_ptr<Level> make_level(size_t idx, bool continuous);
 
 };

@@ -107,6 +107,8 @@ HPP(main_menu);
 HPP(player);
 HPP(scene);
 HPP(util);
+HPP(overlay);
+HPP(singlerun);
 
 // list the headers each .cpp file depends on
 #define HEADERS(of, ...) const char *const of ## _headers[] = { of ## _hpp, __VA_ARGS__ }
@@ -118,7 +120,7 @@ HEADERS(player, actions_hpp, level_hpp, util_hpp);
 HEADERS(input_manager);
 HEADERS(actions, input_manager_hpp);
 HEADERS(level,
-	actions_hpp, globals_hpp, gui_hpp, levels_list_hpp, player_hpp
+	actions_hpp, globals_hpp, levels_list_hpp, overlay_hpp, player_hpp,
 );
 HEADERS(main_menu,
 	globals_hpp, gui_hpp, level_scene_hpp, level_select_hpp, scene_hpp
@@ -126,11 +128,17 @@ HEADERS(main_menu,
 HEADERS(levels_list, level_hpp);
 HEADERS(gui, globals_hpp);
 HEADERS(level_select,
-	gui_hpp, level_scene_hpp, levels_list_hpp, main_menu_hpp, scene_hpp
+	gui_hpp, level_scene_hpp, levels_list_hpp, main_menu_hpp, scene_hpp,
+	singlerun_hpp
 );
 HEADERS(config);
 HEADERS(util);
 HEADERS(level_scene, level_hpp, levels_list_hpp, main_menu_hpp, scene_hpp);
+HEADERS(overlay, globals_hpp, gui_hpp);
+HEADERS(singlerun,
+	gui_hpp, level_hpp, levels_list_hpp, main_menu_hpp, player_hpp,
+	scene_hpp
+);
 
 // most files in the project exists in src/name.cpp, outputs to build/name.o,
 // and depends on the headers defined in name_headers
@@ -158,6 +166,8 @@ struct Target {
 	STANDARD_FILE(config),
 	STANDARD_FILE(util),
 	STANDARD_FILE(level_scene),
+	STANDARD_FILE(overlay),
+	STANDARD_FILE(singlerun),
 };
 
 // check if a particular file needs rebuilding
@@ -196,7 +206,7 @@ const char *ld_flags[] = {
 	"-L./raylib-5.5_win64_mingw-w64/lib",
 	// idk why, but we need to link extra stuff for it to work on Windows
 	// (at least if you plan on running the executable through wine)
-	"-lraylib", "-lm", "-lgdi32", "-lwinmm",
+	"-lraylib", "-lgdi32", "-lwinmm",
 	// link it statically, easier than making sure that the end-user has
 	// all the libc and libc++ dlls
 	// NOTE: this might complicate distribution, as I believe they have
@@ -208,7 +218,7 @@ const char *ld_flags[] = {
 	"-static",
 #else
 	"-L./raylib/src",
-	"-lraylib", "-lm",
+	"-lraylib",
 #endif
 };
 

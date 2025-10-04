@@ -101,7 +101,7 @@ struct Text {
 		);
 
 		if (centered) {
-			const float x_centre = global::WINDOW_WIDTH / 2.0f;
+			const float x_centre = global::WINDOW_WIDTH / 2.0f - pos.x;
 			return { x_centre - size.x/2, pos.y };
 		} else return pos;
 	}

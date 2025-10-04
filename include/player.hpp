@@ -29,6 +29,13 @@ public:
 		int double_jumps = 0;
 		int deaths = 0;
 		int times_spawned = 0;
+
+		void accumulate(const Stats &other) {
+			jumps += other.jumps;
+			double_jumps += other.double_jumps;
+			deaths += other.deaths;
+			times_spawned += other.times_spawned;
+		}
 	};
 
 private:
