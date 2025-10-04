@@ -100,7 +100,8 @@ void Player::resolve_collisions_x(Level &level) {
 			// if there is no x collision, or if the player only
 			// slightly overlaps with the block in the y axis,
 			// no work to be done
-			if (!collision.x_touches || std::abs(collision.dist.y) <= EPS) continue;
+			const bool x_inside = collision.x_touches && collision.dist.x != 0;
+			if (!x_inside || std::abs(collision.dist.y) <= EPS) continue;
 
 			switch (type) {
 				case TileType::Solid: if (std::abs(collision.dist.x) >= EPS) {
@@ -145,7 +146,8 @@ void Player::resolve_collisions_y(Level &level) {
 			// if there is no y collision, or if the player only
 			// slightly overlaps with the block in the x axis,
 			// no work to be done
-			if (!collision.y_touches || std::abs(collision.dist.x) <= EPS) continue;
+			const bool y_inside = collision.y_touches && collision.dist.y != 0;
+			if (!y_inside || std::abs(collision.dist.x) <= EPS) continue;
 
 			switch (type) {
 				case TileType::Solid: if (std::abs(collision.dist.y) >= EPS) {
