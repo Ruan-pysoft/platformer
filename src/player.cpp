@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "level.hpp"
+#include "raylib.h"
 #include "util.hpp"
 
 inline constexpr MotionInputs operator|(MotionInputs a, MotionInputs b) {
@@ -313,4 +314,12 @@ void Player::draw(float interp) const {
 		size,
 		BLACK
 	);
+#ifndef RELEASE
+	const std::string y_vel = std::to_string(int(vel.y));
+	const std::string x_vel = std::to_string(int(vel.x));
+	const auto y_width = MeasureTextEx(GetFontDefault(), y_vel.c_str(), 1, .1);
+	const auto x_width = MeasureTextEx(GetFontDefault(), y_vel.c_str(), 1, .1);
+	DrawTextEx(GetFontDefault(), x_vel.c_str(), { visual_pos.x - y_width.x/2, visual_pos.y - size.y - 1.25f }, 1, .1, BLACK);
+	DrawTextEx(GetFontDefault(), y_vel.c_str(), { visual_pos.x - x_width.x/2, visual_pos.y - size.y - 2.5f }, 1, .1, BLACK);
+#endif /* RELEASE */
 }
