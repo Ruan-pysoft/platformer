@@ -1,6 +1,7 @@
 #include "player.hpp"
 
 #include <algorithm>
+#include <iostream>
 
 #include "level.hpp"
 #include "util.hpp"
@@ -39,6 +40,9 @@ Player::Player() {
 		if (!killed) ++stats.deaths;
 		killed = true;
 	});
+	slam_action = Action::Slam.register_cb([this](float) {
+		inputs |= MotionInputs::Slam;
+	});
 }
 
 bool Player::on_ground(Level &level) {
@@ -54,7 +58,7 @@ bool Player::on_ground(Level &level) {
 		if (collider.width == 0 && collider.height == 0) continue;
 		if (collider.x >= pos.x + size.x/2 || collider.x + collider.width <= pos.x - size.x/2) continue;
 
-		const TileType type = level.get_tile_type(check_point.x, check_point.y);
+		const TileType type = level.get_tile(check_point.x, check_point.y).type;
 
 		if (type != TileType::Solid) continue;
 
@@ -90,9 +94,9 @@ void Player::resolve_collisions_x(Level &level) {
 				pos.y - 0.5f + dy,
 			};
 			const auto collider = level.get_collider(check_point.x, check_point.y);
-			const auto type = level.get_tile_type(check_point.x, check_point.y);
+			const auto tile = level.get_tile(check_point.x, check_point.y);
 
-			if (type == TileType::Empty) continue;
+			if (tile.type == TileType::Empty) continue;
 			if (collider.width == 0 && collider.height == 0) continue;
 
 			const auto collision = util::collide(player_collider, collider);
@@ -103,11 +107,15 @@ void Player::resolve_collisions_x(Level &level) {
 			const bool x_inside = collision.x_touches && collision.dist.x != 0;
 			if (!x_inside || std::abs(collision.dist.y) <= EPS) continue;
 
-			switch (type) {
+			switch (tile.type) {
 				case TileType::Solid: if (std::abs(collision.dist.x) >= EPS) {
 					pos.x = collision.new_pos.x + size.x/2;
-					if (collision.dist.x < 0 && vel.x > 0) vel.x = 0;
-					if (collision.dist.x > 0 && vel.x < 0) vel.x = 0;
+					if (collision.dist.x < 0 && vel.x > 0) {
+						vel.x *= -tile.bounce.side;
+					}
+					if (collision.dist.x > 0 && vel.x < 0) {
+						vel.x = -tile.bounce.side;
+					}
 				} break;
 				case TileType::Danger: {
 					if (!killed) ++stats.deaths;
@@ -139,9 +147,9 @@ void Player::resolve_collisions_y(Level &level) {
 				pos.y - 0.5f + dy,
 			};
 			const auto collider = level.get_collider(check_point.x, check_point.y);
-			const auto type = level.get_tile_type(check_point.x, check_point.y);
+			const auto tile = level.get_tile(check_point.x, check_point.y);
 
-			if (type == TileType::Empty) continue;
+			if (tile.type == TileType::Empty) continue;
 			if (collider.width == 0 && collider.height == 0) continue;
 
 			const auto collision = util::collide(player_collider, collider);
@@ -152,11 +160,16 @@ void Player::resolve_collisions_y(Level &level) {
 			const bool y_inside = collision.y_touches && collision.dist.y != 0;
 			if (!y_inside || std::abs(collision.dist.x) <= EPS) continue;
 
-			switch (type) {
+			switch (tile.type) {
 				case TileType::Solid: if (std::abs(collision.dist.y) >= EPS) {
 					pos.y = collision.new_pos.y + size.y;
-					if (collision.dist.y < 0 && vel.y > 0) vel.y = 0;
-					if (collision.dist.y > 0 && vel.y < 0) vel.y = 0;
+					if (collision.dist.y < 0 && vel.y > 0) {
+						vel.y *= -tile.bounce.top;
+						if (vel.y > -3) vel.y = 0;
+					}
+					if (collision.dist.y > 0 && vel.y < 0) {
+						vel.y *= -tile.bounce.bottom;
+					}
 				} break;
 				case TileType::Danger: {
 					if (!killed) ++stats.deaths;
@@ -225,6 +238,13 @@ void Player::update(Level &level) {
 		++stats.double_jumps;
 		vel.y = -jump_vel;
 		jumpstate = JumpState::DoubleJumped;
+	} else if (test_input(MotionInputs::Slam) && jumpstate != JumpState::Grounded) {
+		jumpstate = JumpState::Slamming;
+	} else if (test_input(MotionInputs::Slam) && jumpstate == JumpState::Grounded) {
+		vel.y = 0;
+	}
+	if (!test_input(MotionInputs::Slam) && jumpstate == JumpState::Slamming) {
+		jumpstate = JumpState::DoubleJumped;
 	}
 	if (test_input(MotionInputs::WalkLeft)) {
 		if (vel.x > 0) {
@@ -249,6 +269,12 @@ void Player::update(Level &level) {
 	if (jumpstate == JumpState::Grounded) {
 		vel.y = std::min(0.f, vel.y);
 
+		const Vector2 right_below = { pos.x, pos.y + 0.5f };
+		const float friction = std::max(std::max(
+			level.get_tile(right_below.x, right_below.y).friction,
+			level.get_tile(right_below.x - 1, right_below.y).friction
+		), level.get_tile(right_below.x + 1, right_below.y).friction
+		);
 		if (!test_input(MotionInputs::WalkLeft | MotionInputs::WalkRight)) {
 			if (friction * dt >= std::abs(vel.x)) vel.x = 0;
 			else if (vel.x > 0) vel.x -= friction * dt;
@@ -256,7 +282,8 @@ void Player::update(Level &level) {
 		}
 	} else {
 		if (!test_input(MotionInputs::Fly)) {
-			vel.y += level.gravity * dt;
+			const float scale = jumpstate == JumpState::Slamming ? 2.0f : 1.0f;
+			vel.y += level.gravity * scale * dt;
 		}
 	}
 

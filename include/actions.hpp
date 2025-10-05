@@ -5,7 +5,6 @@
 #include <unordered_map>
 
 #include "raylib.h"
-
 template<typename T>
 using callback_map_t = std::unordered_map<uint32_t, T>;
 
@@ -100,6 +99,7 @@ namespace Action {
 
 extern ActionSustain Jump;
 extern ActionOnce DoubleJump;
+extern ActionSustain Slam;
 extern ActionSustain Left;
 extern ActionSustain Right;
 extern ActionSustain Fly;
@@ -143,6 +143,9 @@ static const struct {
 	{ KEY_W, Jump },
 	{ KEY_UP, Jump },
 	{ KEY_K, Jump },
+	{ KEY_S, Slam },
+	{ KEY_DOWN, Slam },
+	{ KEY_J, Slam },
 	{ KEY_F, Fly },
 };
 

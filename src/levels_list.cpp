@@ -20,6 +20,7 @@ const std::vector<LevelInfo> levels = {
 	} },
 	{ "levels/level1.png", { 2, -4 }, {} },
 	{ "levels/level2.png", { 16, -1 }, {} },
+	{ "levels/materials.png", { 1, -1 }, {} },
 };
 
 std::unique_ptr<Level> make_level(size_t idx) {

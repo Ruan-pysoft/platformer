@@ -69,6 +69,7 @@ namespace Action {
 
 ActionSustain Jump{};
 ActionOnce DoubleJump{};
+ActionSustain Slam{};
 ActionSustain Left{};
 ActionSustain Right{};
 ActionSustain Fly{};

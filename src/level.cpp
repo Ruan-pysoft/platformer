@@ -243,14 +243,14 @@ Rectangle Level::get_collider(float x, float y) const {
 	}
 	return { lvl_x + offset.x, lvl_y + offset.y, 1, 1 };
 }
-TileType Level::get_tile_type(float x, float y) const {
+Tile Level::get_tile(float x, float y) const {
 	const auto offset = get_offset();
 	const int lvl_x = x - offset.x;
 	const int lvl_y = y - offset.y;
 	if (lvl_x < 0 || lvl_x >= w || lvl_y < 0 || lvl_y >= h) {
-		return TileType::Empty;
+		return Tile();
 	}
-	return tiles[lvl_x + lvl_y*w].type;
+	return tiles[lvl_x + lvl_y*w];
 }
 void Level::activate_checkpoint(float x, float y) {
 	const auto offset = get_offset();

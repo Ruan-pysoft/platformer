@@ -14,14 +14,23 @@
 enum class TileType { Empty, Solid, Danger, Goal, Checkpoint };
 
 struct Tile {
+	struct Bounce {
+		float top = 0;
+		float bottom = 0;
+		float side = 0;
+	};
+
 	constexpr Tile() : type(TileType::Empty), color(Color { 0, 0, 0, 0 }), in_front(false) {}
 	constexpr Tile(Color color) : type(TileType::Solid), color(color), in_front(false) {}
 	constexpr Tile(Color color, TileType type) : type(type), color(color), in_front(false) {}
 	constexpr Tile(Color color, TileType type, bool in_front) : type(type), color(color), in_front(in_front) {}
+	constexpr Tile(Color color, TileType type, bool in_front, Bounce bounce, float friction) : type(type), color(color), in_front(in_front), bounce(bounce), friction(friction) {}
 
 	TileType type;
 	Color color;
 	bool in_front;
+	Bounce bounce;
+	float friction = 12;
 };
 
 class Level;
@@ -105,7 +114,7 @@ public:
 	void display_win_overlay();
 
 	Rectangle get_collider(float x, float y) const;
-	TileType get_tile_type(float x, float y) const;
+	Tile get_tile(float x, float y) const;
 	void activate_checkpoint(float x, float y);
 
 	void update(float dt);
@@ -116,7 +125,9 @@ namespace Levels {
 
 static constexpr Tile floor = Tile(BLACK);
 static constexpr Tile air = Tile();
-static constexpr Tile wall = Tile(BROWN);
+static constexpr Tile wall = Tile(BROWN, TileType::Solid, false, {}, 16);
+static constexpr Tile track = Tile({ 95, 63, 0, 255 }, TileType::Solid, false, {}, 32);
+static constexpr Tile slime = Tile({ 0, 95, 31, 255 }, TileType::Solid, false, { 0.75, 0.9, 0.5 }, 42);
 static constexpr Tile ghost = Tile({ 195, 195, 255, 127 }, TileType::Empty, true);
 static constexpr Tile flag = Tile({ 0, 255, 0, 255 }, TileType::Goal);
 static constexpr Tile lava = Tile({ 255, 63, 15, 255 }, TileType::Danger);
@@ -128,7 +139,10 @@ static constexpr struct {
 } colormap[] = {
 	{ { 0, 0, 0, 255 },       floor },
 	{ { 0, 0, 0, 0 },         air },
+	{ { 255, 255, 255, 255 }, air },
 	{ { 127, 127, 127, 255 }, wall },
+	{ { 95, 63, 0, 255 },     track },
+	{ { 0, 95, 31, 255 },     slime },
 	{ { 195, 195, 255, 255 }, ghost },
 	{ { 0, 255, 0, 255 },     flag },
 	{ { 255, 0, 0, 255 },     lava },

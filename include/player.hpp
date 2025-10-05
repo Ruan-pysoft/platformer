@@ -10,6 +10,7 @@ enum class JumpState {
 	Grounded,
 	Airborne,
 	DoubleJumped,
+	Slamming,
 };
 
 enum class MotionInputs : uint8_t {
@@ -19,6 +20,7 @@ enum class MotionInputs : uint8_t {
 	WalkLeft = (1 << 2),
 	WalkRight = (1 << 3),
 	Fly = (1 << 4),
+	Slam = (1 << 5),
 };
 
 class Level;
@@ -48,6 +50,7 @@ private:
 	bool level_completed = false;
 	ActionSustain::cb_handle_t jump_action;
 	ActionOnce::cb_handle_t double_jump_action;
+	ActionSustain::cb_handle_t slam_action;
 	ActionSustain::cb_handle_t walk_left_action;
 	ActionSustain::cb_handle_t walk_right_action;
 	ActionSustain::cb_handle_t fly_action;
@@ -59,7 +62,6 @@ private:
 	static constexpr float walk_acc = 16;
 	static constexpr float walk_dec = 32;
 	static constexpr float walk_vel = 20;
-	static constexpr float friction = 12;
 	static constexpr int coyote_frames = 2;
 
 	bool on_ground(Level &level);
