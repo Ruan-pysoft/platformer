@@ -302,7 +302,9 @@ void Level::update(float dt) {
 	frame_acc += dt;
 	const bool physics_tick = frame_acc >= 1.0f/global::PHYSICS_FPS;
 	if (physics_tick) {
-		frame_acc -= 1.0f/global::PHYSICS_FPS;
+		while (frame_acc >= 1.0f/global::PHYSICS_FPS) {
+			frame_acc -= 1.0f/global::PHYSICS_FPS;
+		}
 		++stats.level_ticks;
 
 		player->update(*this);

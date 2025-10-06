@@ -166,7 +166,6 @@ void Player::resolve_collisions_y(Level &level) {
 					pos.y = collision.new_pos.y + size.y;
 					if (collision.dist.y < 0 && vel.y > 0) {
 						vel.y *= -tile.bounce.top;
-						if (vel.y > -3) vel.y = 0;
 					}
 					if (collision.dist.y > 0 && vel.y < 0) {
 						vel.y *= -tile.bounce.bottom;
