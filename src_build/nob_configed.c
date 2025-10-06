@@ -4,7 +4,7 @@
 #define NOB_STRIP_PREFIX
 #define NOB_EXPERIMENTAL_DELETE_OLD
 #define NOB_WARN_DEPRECATED
-#include "nob.h"
+#include "nob.h/nob.h"
 
 bool build_raylib(void);
 bool build_game(void);

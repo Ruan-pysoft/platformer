@@ -4,7 +4,7 @@
 #define NOB_STRIP_PREFIX
 #define NOB_EXPERIMENTAL_DELETE_OLD
 #define NOB_WARN_DEPRECATED
-#include "nob.h"
+#include "nob.h/nob.h"
 #include "src_build/dirs.h"
 
 extern const char *initial_config;
@@ -76,8 +76,8 @@ int main(int argc, char **argv) {
 	if (init) return 0;
 
 	cmd_append(&cmd, output_path);
-	// forward args to configured build script
-	for (int i = 0; i < argc; ++i) {
+	// forward args to configured build script, except for the program name (argv[0])
+	for (int i = 1; i < argc; ++i) {
 		cmd_append(&cmd, argv[i]);
 	}
 	if (!cmd_run(&cmd)) return 1;
