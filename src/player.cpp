@@ -1,7 +1,6 @@
 #include "player.hpp"
 
 #include <algorithm>
-#include <iostream>
 
 #include "level.hpp"
 #include "raylib.h"

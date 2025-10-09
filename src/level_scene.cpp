@@ -67,17 +67,17 @@ void LevelScene::post_draw() {
 		return;
 	}
 	switch (level->change) {
-		case LevelChange::None: break;
-		case LevelChange::Prev: {
+		case Level::Change::None: break;
+		case Level::Change::Prev: {
 			prev_level();
 		} break;
-		case LevelChange::Next: {
+		case Level::Change::Next: {
 			next_level();
 		} break;
-		case LevelChange::Reset: {
+		case Level::Change::Reset: {
 			reset_level();
 		} break;
-		case LevelChange::MainMenu: {
+		case Level::Change::MainMenu: {
 			main_menu();
 		} break;
 	}

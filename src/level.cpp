@@ -42,10 +42,10 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h,
 	camera.zoom = global::PPU;
 
 	pause_action = Action::Pause.register_cb([this]() {
-		if (state == LevelState::Paused) {
-			state = LevelState::Active;
-		} else if (state == LevelState::Active) {
-			state = LevelState::Paused;
+		if (state == Level::State::Paused) {
+			state = Level::State::Active;
+		} else if (state == Level::State::Active) {
+			state = Level::State::Paused;
 		}
 	});
 
@@ -55,13 +55,13 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h,
 	pause_overlay.add_text(pause_text);
 	pause_overlay.add_button({
 		[this]() {
-			state = LevelState::Active;
+			state = Level::State::Active;
 		},
 		GuiBox::floating_x({ -137.5f, 100 }, { 250, 75 }), "RESUME"
 	});
 	pause_overlay.add_button({
 		[this]() {
-			change = LevelChange::MainMenu;
+			change = Level::Change::MainMenu;
 		},
 		GuiBox::floating_x({ 137.5f, 100 }, { 250, 75 }), "MAIN MENU"
 	});
@@ -76,17 +76,17 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h,
 	} else if (!continuous) {
 		pause_overlay.add_button({
 			[this]() {
-				change = LevelChange::Prev;
+				change = Level::Change::Prev;
 			},
 			pause_prev_box, pause_prev_txt
 		});
 	}
 	pause_overlay.add_button({
 		[this]() {
-			if (this->continuous && state == LevelState::WinScreen) {
+			if (this->continuous && state == Level::State::WinScreen) {
 				return;
 			}
-			change = LevelChange::Reset;
+			change = Level::Change::Reset;
 		},
 		GuiBox::floating_x(
 			{ 0, continuous ? 200.0f : 300.0f }, { 525, 75 }
@@ -102,21 +102,21 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h,
 	if (continuous) {
 		win_overlay.add_button({
 			[this]() {
-				change = LevelChange::Next;
+				change = Level::Change::Next;
 			},
 			GuiBox::floating_x({ -137.5f, 150 }, { 250, 75 }), "CONTINUE"
 		});
 	} else {
 		win_overlay.add_button({
 			[this]() {
-				change = LevelChange::Next;
+				change = Level::Change::Next;
 			},
 			GuiBox::floating_x({ -137.5f, 150 }, { 250, 75 }), "PROCEED"
 		});
 	}
 	win_overlay.add_button({
 		[this]() {
-			change = LevelChange::MainMenu;
+			change = Level::Change::MainMenu;
 		},
 		GuiBox::floating_x({ 137.5f, 150 }, { 250, 75 }), "MAIN MENU"
 	});
@@ -132,25 +132,25 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h,
 		} else {
 			win_overlay.add_button({
 				[this]() {
-					change = LevelChange::Prev;
+					change = Level::Change::Prev;
 				},
 				win_prev_box, win_prev_txt
 			});
 		}
 		win_overlay.add_button({
 			[this]() {
-				change = LevelChange::Reset;
+				change = Level::Change::Reset;
 			},
 			GuiBox::floating_x({ 0, 350 }, { 525, 75 }), "RESTART LEVEL"
 		});
 	}
 
 	reset_action = Action::Reset.register_cb([this]() {
-		change = LevelChange::Reset;
+		change = Level::Change::Reset;
 	});
 	next_level_action = Action::NextLevel.register_cb([this]() {
-		if (state == LevelState::WinScreen) {
-			change = LevelChange::Next;
+		if (state == Level::State::WinScreen) {
+			change = Level::Change::Next;
 		}
 	});
 }
@@ -227,7 +227,7 @@ void Level::respawn_player() {
 	player->reset(get_player_spawn());
 }
 void Level::display_win_overlay() {
-	state = LevelState::WinScreen;
+	state = Level::State::WinScreen;
 }
 
 Rectangle Level::get_collider(float x, float y) const {
@@ -265,10 +265,10 @@ void Level::activate_checkpoint(float x, float y) {
 
 void Level::update(float dt) {
 	switch (state) {
-		case LevelState::Paused: {
+		case Level::State::Paused: {
 			pause_overlay.update(dt);
 		} break;
-		case LevelState::WinScreen: {
+		case Level::State::WinScreen: {
 			Text *time_text = win_overlay.get_text(1);
 			if (time_text->text.size() == 0) {
 				time_text->text = "Completion time: ";
@@ -294,10 +294,10 @@ void Level::update(float dt) {
 
 			win_overlay.update(dt);
 		} break;
-		case LevelState::Active: break;
+		case Level::State::Active: break;
 	}
 
-	if (state != LevelState::Active) return;
+	if (state != Level::State::Active) return;
 
 	frame_acc += dt;
 	const bool physics_tick = frame_acc >= 1.0f/global::PHYSICS_FPS;
@@ -427,12 +427,12 @@ void Level::draw() const {
 	DrawText(level_time_str.c_str(), global::WINDOW_WIDTH - 10 - level_time_str_width, 10, level_time_str_height, BLACK);
 
 	switch (state) {
-		case LevelState::Paused: {
+		case Level::State::Paused: {
 			pause_overlay.draw();
 		} break;
-		case LevelState::WinScreen: {
+		case Level::State::WinScreen: {
 			win_overlay.draw();
 		} break;
-		case LevelState::Active: break;
+		case Level::State::Active: break;
 	}
 }

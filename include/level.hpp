@@ -42,11 +42,10 @@ struct LevelText {
 	void draw(const Level &level, const Camera2D &camera) const;
 };
 
-enum class LevelState { Active, Paused, WinScreen };
-enum class LevelChange { None, Prev, Next, Reset, MainMenu };
-
 class Level {
 public:
+	enum class State { Active, Paused, WinScreen };
+	enum class Change { None, Prev, Next, Reset, MainMenu };
 	struct Stats {
 		int level_ticks = 0;
 
@@ -64,7 +63,7 @@ private:
 	size_t level_nr;
 	std::vector<LevelText> texts = {};
 	float camera_move_time = 0;
-	LevelState state = LevelState::Active;
+	State state = State::Active;
 	ActionOnce::cb_handle_t pause_action;
 	Overlay pause_overlay;
 	Overlay win_overlay;
@@ -86,7 +85,7 @@ private:
 	);
 public:
 	float gravity = 20;
-	LevelChange change = LevelChange::None;
+	Change change = Change::None;
 
 	Vector2 get_offset() const;
 	int get_level_nr() const;
