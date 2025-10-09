@@ -377,6 +377,8 @@ void Level::draw() const {
 			const float adj = (1 - factor)/2;
 			const auto color = tiles[x + y*w].color;
 
+			if (color.a == 0) continue; // don't draw invisible tiles
+
 			const Rectangle rect = {
 				pos.x + size.x*adj, pos.y + size.y*adj,
 				size.x*factor, size.y*factor
