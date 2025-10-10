@@ -14,6 +14,22 @@ If you want to know what a module does/its API, look in the `include/<module>.hp
 
 If instead you want to know the implementation details, look in the `src/<module>.cpp` file.
 
+## Overview & Summary
+
+This is a simple platformer game implemented in C++ using the [Raylib](https://www.raylib.com/) library. It will be submitted as my semester project for CMPG121.
+
+The features of the game include:
+ - Deterministic physics
+ - Coyote time
+ - Level timers and personal best tracking (greatly increases fun and replayability)
+ - Image-based level loading
+
+The game is built around a `Game` object which manages `Scene`s such as menus or levels.
+
+Each `Scene` type implements its own `draw` and `update` function to handle physics, display, and user interaction. Levels are loaded from image files based on pre-defined tiles, and the player interacts with the level using a fixed-timestep physics simulation. Keyboard input is handled through the `InputManager` abstraction, which communicates with various `Action*` objects.
+
+Resource management is done entirely via RAII, with standard containers being used for memory allocations and handle types that deregister resources upon destructions. This entirely alleviates the need for manual memory management without introducing garbage collection, as well as simplifying other resource management concerns. The program loop handles inputs, physics updates/user interaction, drawing, and scene transitions in that order, and attempts to run at the game's target FPS (60).
+
 ## Memory/Resource Management
 
 Throughout the whole program, memory is never explicitly allocated or deleted using `new`/`delete`. Rather, when dynamic allocations are needed, standard collection structures from the C++ STL is used (such as `std::vector`, `std::string`, or `std::unordered_map`), or memory will be allocated using a `std::unique_ptr`.
