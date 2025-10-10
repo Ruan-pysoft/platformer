@@ -222,8 +222,8 @@ void Player::update(Level &level) {
 		jumpstate = JumpState::Grounded;
 		coyote_frames_left = coyote_frames;
 	} else if (jumpstate == JumpState::Grounded) {
-		--coyote_frames_left;
 		if (coyote_frames_left <= 0) jumpstate = JumpState::Airborne;
+		else --coyote_frames_left;
 	}
 
 	if (test_input(MotionInputs::Jump) && jumpstate == JumpState::Grounded) {
