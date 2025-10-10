@@ -1,8 +1,12 @@
 #include "singlerun.hpp"
 
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
+#include <string>
 
+#include "globals.hpp"
 #include "level.hpp"
 #include "levels_list.hpp"
 #include "main_menu.hpp"
@@ -62,29 +66,69 @@ void SingleRun::update(float dt) {
 	if (state == State::Playing) {
 		if (level != nullptr) level->update(dt);
 	} else {
-		Text &time_text = text[1];
-		if (time_text.text.size() == 0) {
-			time_text.text = "Completion time: ";
-			const int seconds = total_stats.level_ticks / global::PHYSICS_FPS;
-			const int frames = total_stats.level_ticks % global::PHYSICS_FPS;
-			time_text.text += std::to_string(seconds);
-			time_text.text += ";";
-			if (frames < 10) time_text.text += "0";
-			time_text.text += std::to_string(frames);
-		}
-		Text &jumps_text = text[2];
-		if (jumps_text.text.size() == 0) {
-			jumps_text.text = "Total jumps: ";
-			jumps_text.text += std::to_string(
-				total_player_stats.jumps + total_player_stats.double_jumps
-			);
-		}
-		Text &deaths_text = text[3];
-		if (deaths_text.text.size() == 0) {
-			deaths_text.text = "Total deaths/resets: ";
-			deaths_text.text += std::to_string(
-				total_player_stats.times_spawned
-			);
+		if (!initialised_winscreen) {
+			initialised_winscreen = true;
+
+			Level::PBFile pbs{};
+			if (std::filesystem::exists("data/pbs")) {
+				std::ifstream pbs_file("data/pbs");
+				pbs = Level::PBFile::load(pbs_file);
+				pbs_file.close();
+			}
+			auto pb_stats = pbs.get("challenge_run");
+
+			Text &time_text = text[1];
+			if (time_text.text.size() == 0) {
+				time_text.text = "Completion time: ";
+				const int seconds = total_stats.level_ticks / global::PHYSICS_FPS;
+				const int frames = total_stats.level_ticks % global::PHYSICS_FPS;
+				time_text.text += std::to_string(seconds);
+				time_text.text += ";";
+				if (frames < 10) time_text.text += "0";
+				time_text.text += std::to_string(frames);
+
+				if (pb_stats != nullptr) {
+					time_text.text += " ; PB: ";
+					const int seconds = pb_stats->first.level_ticks / global::PHYSICS_FPS;
+					const int frames = pb_stats->first.level_ticks % global::PHYSICS_FPS;
+					time_text.text += std::to_string(seconds);
+					time_text.text += ";";
+					if (frames < 10) time_text.text += "0";
+					time_text.text += std::to_string(frames);
+				}
+			}
+			Text &jumps_text = text[2];
+			if (jumps_text.text.size() == 0) {
+				jumps_text.text = "Total jumps: ";
+				jumps_text.text += std::to_string(
+					total_player_stats.jumps + total_player_stats.double_jumps
+				);
+
+				if (pb_stats != nullptr) {
+					jumps_text.text += " ; PB: ";
+					jumps_text.text += std::to_string(pb_stats->second.jumps + pb_stats->second.double_jumps);
+				}
+			}
+			Text &deaths_text = text[3];
+			if (deaths_text.text.size() == 0) {
+				deaths_text.text = "Total deaths/resets: ";
+				deaths_text.text += std::to_string(
+					total_player_stats.times_spawned
+				);
+
+				if (pb_stats != nullptr) {
+					deaths_text.text += " ; PB: ";
+					deaths_text.text += std::to_string(pb_stats->second.times_spawned);
+				}
+			}
+
+			if (pb_stats == nullptr || pb_stats->first.level_ticks > total_stats.level_ticks) {
+				pbs.set("challenge_run", std::make_pair(total_stats, total_player_stats));
+
+				std::ofstream pbs_file("data/pbs");
+				pbs.save(pbs_file);
+				pbs_file.close();
+			}
 		}
 
 		for (auto &e : buttons) e.update(dt);

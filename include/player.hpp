@@ -19,7 +19,9 @@ enum class MotionInputs : uint8_t {
 	DoubleJump = (1 << 1),
 	WalkLeft = (1 << 2),
 	WalkRight = (1 << 3),
+	#ifdef DEBUG
 	Fly = (1 << 4),
+	#endif
 	Slam = (1 << 5),
 };
 
@@ -53,7 +55,9 @@ private:
 	ActionSustain::cb_handle_t slam_action;
 	ActionSustain::cb_handle_t walk_left_action;
 	ActionSustain::cb_handle_t walk_right_action;
+	#ifdef DEBUG
 	ActionSustain::cb_handle_t fly_action;
+	#endif
 	ActionOnce::cb_handle_t suicide_action;
 	Stats stats;
 

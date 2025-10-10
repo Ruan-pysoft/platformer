@@ -72,7 +72,9 @@ ActionOnce DoubleJump{};
 ActionSustain Slam{};
 ActionSustain Left{};
 ActionSustain Right{};
+#ifdef DEBUG
 ActionSustain Fly{};
+#endif
 
 ActionOnce Suicide{};
 ActionOnce Reset{};

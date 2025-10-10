@@ -102,7 +102,9 @@ extern ActionOnce DoubleJump;
 extern ActionSustain Slam;
 extern ActionSustain Left;
 extern ActionSustain Right;
+#ifdef DEBUG
 extern ActionSustain Fly;
+#endif
 
 extern ActionOnce Suicide;
 extern ActionOnce Reset;
@@ -146,7 +148,9 @@ static const struct {
 	{ KEY_S, Slam },
 	{ KEY_DOWN, Slam },
 	{ KEY_J, Slam },
+	#ifdef DEBUG
 	{ KEY_F, Fly },
+	#endif
 };
 
 }

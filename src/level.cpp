@@ -1,8 +1,11 @@
 #include "level.hpp"
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "raylib.h"
@@ -23,6 +26,109 @@ void LevelText::draw(const Level &level, const Camera2D &camera) const {
 	const float spacing = font_size / 10.0f;
 
 	DrawTextEx(GetFontDefault(), text.c_str(), scr_pos, font_size, spacing, color);
+}
+
+static void trim(std::string &str) {
+	auto frst = str.find_first_not_of(" \r\t");
+	auto last = str.find_last_not_of(" \r\t");
+
+	if (frst == std::string::npos) str = "";
+	else str = str.substr(frst, last - frst + 1);
+}
+
+Level::PBFile Level::PBFile::load(std::istream &inp) {
+	Level::PBFile res{};
+
+	std::string line;
+	std::pair<Level::Stats, Player::Stats> *curr = nullptr;
+
+	while (std::getline(inp, line)) {
+		trim(line);
+		if (line.empty() || line[0] == '#') continue;
+		auto pos = line.find(' ');
+
+		if (pos == std::string::npos && line == "END") {
+			curr = nullptr;
+			continue;
+		} else if (pos == std::string::npos) {
+			std::cerr << "Warning: malformed line in personal bests file, skipping!" << std::endl;
+			continue;
+		}
+		std::string key = line.substr(0, pos);
+		std::string val = line.substr(pos + 1);
+		trim(key);
+		trim(val);
+
+		if (key == "BEGIN") {
+			if (curr != nullptr) {
+				std::cerr << "Warning: started new PB list before ending the last one!" << std::endl;
+			}
+			if (res.pbs.find(val) == res.pbs.end()) {
+				res.pbs[val] = {};
+			}
+			curr = &res.pbs[val];
+		} else if (key == "ticks") {
+			if (curr == nullptr) {
+				std::cerr << "Warning: ticks specified outside of PB list!" << std::endl;
+				continue;
+			}
+			curr->first.level_ticks = atoi(val.c_str());
+		} else if (key == "jumps") {
+			if (curr == nullptr) {
+				std::cerr << "Warning: jumps specified outside of PB list!" << std::endl;
+				continue;
+			}
+			curr->second.jumps = atoi(val.c_str());
+		} else if (key == "double_jumps") {
+			if (curr == nullptr) {
+				std::cerr << "Warning: double jumps specified outside of PB list!" << std::endl;
+				continue;
+			}
+			curr->second.double_jumps = atoi(val.c_str());
+		} else if (key == "deaths") {
+			if (curr == nullptr) {
+				std::cerr << "Warning: deaths specified outside of PB list!" << std::endl;
+				continue;
+			}
+			curr->second.deaths = atoi(val.c_str());
+		} else if (key == "spawns") {
+			if (curr == nullptr) {
+				std::cerr << "Warning: spawns specified outside of PB list!" << std::endl;
+				continue;
+			}
+			curr->second.times_spawned = atoi(val.c_str());
+		} else {
+			std::cerr << "Warning: unrecognised key " << key << " in PB file!" << std::endl;
+			continue;
+		}
+	};
+
+	return res;
+}
+void Level::PBFile::save(std::ostream &out) const {
+	for (const auto &item : pbs) {
+		out << "BEGIN " << item.first << std::endl;
+		out << "ticks " << item.second.first.level_ticks << std::endl;
+		out << "jumps " << item.second.second.jumps << std::endl;
+		out << "double_jumps " << item.second.second.double_jumps << std::endl;
+		out << "deaths " << item.second.second.deaths << std::endl;
+		out << "spawns " << item.second.second.times_spawned << std::endl;
+		out << "END" << std::endl;
+	}
+}
+bool Level::PBFile::has_pb(std::string key) const {
+	return pbs.find(key) == pbs.end();
+}
+const std::pair<Level::Stats, Player::Stats> *Level::PBFile::get(std::string key) const {
+	const auto found = pbs.find(key);
+	if (found == pbs.end()) {
+		return nullptr;
+	} else {
+		return &found->second;
+	}
+}
+void Level::PBFile::set(std::string key, std::pair<Stats, Player::Stats> val) {
+	pbs[key] = val;
 }
 
 Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h,
@@ -95,8 +201,8 @@ Level::Level(size_t level_nr, std::vector<Tile> tiles, int w, int h,
 
 	win_overlay.add_text({ "Level completed", 50, { 0, 12.5 }, true, BLACK });
 	win_overlay.add_text({ "", 24, { 0, 75 }, true, BLACK });
-	win_overlay.add_text({ "", 24, { -100, 100 }, true, BLACK });
-	win_overlay.add_text({ "", 24, { 100, 100 }, true, BLACK });
+	win_overlay.add_text({ "", 24, { -150, 100 }, true, BLACK });
+	win_overlay.add_text({ "", 24, { 150, 100 }, true, BLACK });
 
 
 	if (continuous) {
@@ -269,27 +375,67 @@ void Level::update(float dt) {
 			pause_overlay.update(dt);
 		} break;
 		case Level::State::WinScreen: {
-			Text *time_text = win_overlay.get_text(1);
-			if (time_text->text.size() == 0) {
-				time_text->text = "Completion time: ";
-				const int seconds = stats.level_ticks / global::PHYSICS_FPS;
-				const int frames = stats.level_ticks % global::PHYSICS_FPS;
-				time_text->text += std::to_string(seconds);
-				time_text->text += ";";
-				if (frames < 10) time_text->text += "0";
-				time_text->text += std::to_string(frames);
-			}
-			Text *jumps_text = win_overlay.get_text(2);
-			if (jumps_text->text.size() == 0) {
-				const Player::Stats stats = player->get_stats();
-				jumps_text->text = "Total jumps: ";
-				jumps_text->text += std::to_string(stats.jumps + stats.double_jumps);
-			}
-			Text *deaths_text = win_overlay.get_text(3);
-			if (deaths_text->text.size() == 0) {
-				const Player::Stats stats = player->get_stats();
-				deaths_text->text = "Total deaths: ";
-				deaths_text->text += std::to_string(stats.deaths);
+			if (!has_populated_winscreen) {
+				has_populated_winscreen = true;
+
+				Level::PBFile pbs{};
+				if (std::filesystem::exists("data/pbs")) {
+					std::ifstream pbs_file("data/pbs");
+					pbs = Level::PBFile::load(pbs_file);
+					pbs_file.close();
+				}
+				auto pb_stats = pbs.get(std::to_string(level_nr));
+
+				Text *time_text = win_overlay.get_text(1);
+				if (time_text->text.size() == 0) {
+					time_text->text = "Completion time: ";
+					const int seconds = stats.level_ticks / global::PHYSICS_FPS;
+					const int frames = stats.level_ticks % global::PHYSICS_FPS;
+					time_text->text += std::to_string(seconds);
+					time_text->text += ";";
+					if (frames < 10) time_text->text += "0";
+					time_text->text += std::to_string(frames);
+
+					if (pb_stats != nullptr) {
+						time_text->text += " ; PB: ";
+						const int seconds = pb_stats->first.level_ticks / global::PHYSICS_FPS;
+						const int frames = pb_stats->first.level_ticks % global::PHYSICS_FPS;
+						time_text->text += std::to_string(seconds);
+						time_text->text += ";";
+						if (frames < 10) time_text->text += "0";
+						time_text->text += std::to_string(frames);
+					}
+				}
+				Text *jumps_text = win_overlay.get_text(2);
+				if (jumps_text->text.size() == 0) {
+					const Player::Stats stats = player->get_stats();
+					jumps_text->text = "Total jumps: ";
+					jumps_text->text += std::to_string(stats.jumps + stats.double_jumps);
+
+					if (pb_stats != nullptr) {
+						jumps_text->text += " ; PB: ";
+						jumps_text->text += std::to_string(pb_stats->second.jumps + pb_stats->second.double_jumps);
+					}
+				}
+				Text *deaths_text = win_overlay.get_text(3);
+				if (deaths_text->text.size() == 0) {
+					const Player::Stats stats = player->get_stats();
+					deaths_text->text = "Total deaths: ";
+					deaths_text->text += std::to_string(stats.deaths);
+
+					if (pb_stats != nullptr) {
+						deaths_text->text += " ; PB: ";
+						deaths_text->text += std::to_string(pb_stats->second.deaths);
+					}
+				}
+
+				if (pb_stats == nullptr || pb_stats->first.level_ticks > stats.level_ticks) {
+					pbs.set(std::to_string(level_nr), std::make_pair(stats, player->get_stats()));
+
+					std::ofstream pbs_file("data/pbs");
+					pbs.save(pbs_file);
+					pbs_file.close();
+				}
 			}
 
 			win_overlay.update(dt);

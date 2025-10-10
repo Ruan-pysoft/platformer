@@ -33,9 +33,11 @@ Player::Player() {
 	walk_right_action = Action::Right.register_cb([this](float) {
 		inputs |= MotionInputs::WalkRight;
 	});
+	#ifdef DEBUG
 	fly_action = Action::Fly.register_cb([this](float) {
 		inputs |= MotionInputs::Fly;
 	});
+	#endif
 	suicide_action = Action::Suicide.register_cb([this]() {
 		if (!killed) ++stats.deaths;
 		killed = true;
@@ -261,9 +263,11 @@ void Player::update(Level &level) {
 			if (vel.x > walk_vel) vel.x = walk_vel;
 		}
 	}
+	#ifdef DEBUG
 	if (test_input(MotionInputs::Fly)) {
 		vel.y = std::min(vel.y, -jump_vel / 2.0f);
 	}
+	#endif
 
 	if (jumpstate == JumpState::Grounded) {
 		vel.y = std::min(0.f, vel.y);
@@ -280,10 +284,15 @@ void Player::update(Level &level) {
 			else vel.x += friction * dt;
 		}
 	} else {
+		#ifdef DEBUG
 		if (!test_input(MotionInputs::Fly)) {
 			const float scale = jumpstate == JumpState::Slamming ? 2.0f : 1.0f;
 			vel.y += level.gravity * scale * dt;
 		}
+		#else
+		const float scale = jumpstate == JumpState::Slamming ? 2.0f : 1.0f;
+		vel.y += level.gravity * scale * dt;
+		#endif
 	}
 
 	if (std::abs(vel.y) <= std::abs(vel.x)) {

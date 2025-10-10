@@ -24,8 +24,15 @@ int main() {
 		map.action.register_key(map.key);
 	}
 
-	if (std::filesystem::exists("game.cfg")) {
-		std::ifstream cfg_file("game.cfg");
+	if (!std::filesystem::exists("data/")) {
+		if (!std::filesystem::create_directory("data/")) {
+			std::cerr << "Failed creating game data folder!" << std::endl;
+			return 1;
+		}
+	}
+
+	if (std::filesystem::exists("data/game.cfg")) {
+		std::ifstream cfg_file("data/game.cfg");
 		global::config = Config::read(cfg_file);
 		cfg_file.close();
 	} else {

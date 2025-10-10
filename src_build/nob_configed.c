@@ -195,6 +195,7 @@ const char *cpp_flags[] = {
 	"-O2",
 #else
 	"-g",
+	"-DDEBUG",
 #endif
 	"-Wall", "-Wextra",
 	"-I./include", "-I./raylib/src",
@@ -252,10 +253,6 @@ bool build_game(void) {
 		cmd_push(&cmd, cpp_flags, ARRAY_LEN(cpp_flags));
 		cmd_append(&cmd, "-o", targets[i].obj);
 		cmd_append(&cmd, targets[i].src);
-
-#ifndef RELEASE
-		cmd_append(&cmd, "-DDEBUG");
-#endif
 
 		// and build asynchronously, by default the number of threads
 		// is the number of processors on the machine (which might be

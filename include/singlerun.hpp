@@ -18,6 +18,7 @@ class SingleRun : public Scene {
 	Level::Stats total_stats = {};
 	Player::Stats total_player_stats = {};
 	State state = State::Playing;
+	bool initialised_winscreen = false;
 	std::vector<Text> text = {};
 	std::vector<Button> buttons = {};
 

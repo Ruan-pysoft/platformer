@@ -1,8 +1,10 @@
 #pragma once
 
+#include <istream>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "raylib.h"
@@ -53,6 +55,15 @@ public:
 			level_ticks += other.level_ticks;
 		}
 	};
+	struct PBFile {
+		std::unordered_map<std::string, std::pair<Stats, Player::Stats>> pbs{};
+
+		static PBFile load(std::istream &inp);
+		void save(std::ostream &out) const;
+		bool has_pb(std::string key) const;
+		const std::pair<Stats, Player::Stats> *get(std::string key) const;
+		void set(std::string key, std::pair<Stats, Player::Stats> val);
+	};
 
 private:
 	const std::vector<Tile> tiles;
@@ -66,6 +77,7 @@ private:
 	State state = State::Active;
 	ActionOnce::cb_handle_t pause_action;
 	Overlay pause_overlay;
+	bool has_populated_winscreen = false;
 	Overlay win_overlay;
 	float frame_acc = 0;
 	Stats stats {};
