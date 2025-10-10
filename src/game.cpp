@@ -66,6 +66,10 @@ void Game::update() {
 void Game::draw() const {
 	BeginDrawing();
 
+#ifdef DEBUG
+	const double pre_draw_time = GetTime();
+#endif
+
 	scene->draw();
 
 	const int fps_height = 20;
@@ -76,6 +80,31 @@ void Game::draw() const {
 		global::WINDOW_WIDTH - fps_maxwidth - fps_margin,
 		global::WINDOW_HEIGHT - fps_height - fps_margin
 	);
+
+#ifdef DEBUG
+	WaitTime(42. / 1000 / 1000);
+	const double post_draw_time = GetTime();
+
+	const double draw_time = post_draw_time - pre_draw_time; // number of seconds it took to draw the frame
+
+	const int millis = draw_time * 1000;
+	const int sub_millis = int(draw_time * 1000 * 10) % 10;
+	//const int micros = draw_time * 1000 * 1000;
+
+	const int frametime_height = fps_height;
+	const int frametime_margin = fps_margin;
+
+	const std::string frametime_text = std::to_string(millis) + '.' + std::to_string(sub_millis) + " ms";
+	//const std::string frametime_text = std::to_string(micros) + " µs";
+	const int frametime_width = MeasureText(frametime_text.c_str(), frametime_height);
+
+	DrawText(
+		frametime_text.c_str(),
+		global::WINDOW_WIDTH - frametime_width - frametime_margin,
+		global::WINDOW_HEIGHT - fps_height - fps_margin - frametime_height - frametime_margin,
+		frametime_height, GREEN
+	);
+#endif
 
 #ifdef DEBUG
 	float max_fps = 0.01f;
