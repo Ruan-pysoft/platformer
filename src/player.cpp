@@ -316,7 +316,7 @@ void Player::draw(float interp) const {
 		size,
 		BLACK
 	);
-#ifndef RELEASE
+#ifdef DEBUG
 	const std::string y_vel = std::to_string(int(vel.y));
 	const std::string x_vel = std::to_string(int(vel.x));
 	const auto y_width = MeasureTextEx(GetFontDefault(), y_vel.c_str(), 1, .1);
@@ -325,5 +325,5 @@ void Player::draw(float interp) const {
 	DrawTextEx(GetFontDefault(), y_vel.c_str(), { visual_pos.x - x_width.x/2, visual_pos.y - size.y - 2.5f }, 1, .1, BLACK);
 
 	DrawRectangleLinesEx({ pos.x - size.x/2, pos.y - size.y, size.x, size.y }, 1/16.f, GREEN);
-#endif /* RELEASE */
+#endif
 }

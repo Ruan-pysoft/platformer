@@ -20,24 +20,15 @@ Throughout the whole program, memory is never explicitly allocated or deleted us
 
 This means that all memory allocations and deallocations are handled through C++'s constructors and destructors, using the [RAII](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization) (Resource Acquisition Is Initialisation) technique, completely bypassing the need both for manual memory management as well as a garbage collector.
 
-## Program Entry
+## Conditional Compilation
 
-**Files**: [`src/main.cpp`](./src/main.cpp)
+When compiling debug/development builds, the build system passes the `-DDEBUG` flag to the C++ compiler, which defines a symbol `DEBUG`. This flag is not passed to release builds.
 
-Setup, teardown, and the main loop is all handled in the program's entry point, located in `src/main.cpp`.
+This allows including code only in debug/dev builds of the game, or only in release builds using `#ifdef`/`#ifndef`/`#else`/`#endif` C Preprocessor directives.
 
-It creates the `Game` object, registers keybindings, reads the game's config file, and initialises the Raylib library.
+This is used to include a historical fps tracker, player velocity displays, and player real-time hitbox display only in debug builds of the game and not in release builds. Similarly, a keybind to activate flight is also only included in debug builds.
 
-It then runs the program loop, which does the following, in the provided order:
- 1. Updates the window width/height global variables to the current size
- 2. Handles any input events
- 3. Updates the game
- 4. Renders the game
- 5. Tells the game to change scene as necessary
-
-After all that, it deinitialises the Raylib library.
-
-Additionally, global constants and variables are initialised in `src/main.cpp`.
+The nice thing about conditional inclusion of code, rather than hiding functionality behind flags, is that that code does not increase the size of the executable, it is not sitting unused to be easily enabled by memory editing, and it does not slow down loops by checking a condition that evaluates to `false` each iteration.
 
 ## Global Constants and Variables
 
@@ -126,13 +117,13 @@ The `Game` object handles the game's interface. It keeps track of the current `S
 
 Currently, it doesn't really do much, just serving as an abstraction layer in-between the `main` function and different `Scenes`, and handles some minimal library abstraction.
 
-In debug builds it also keeps track of the fps over a five second period and draws a historical fps graph, which is handled through file-level global variables. This is bad practice, however it is only used as a quick debugging tool in development/debug builds of the game, and is compiled out of release builds, so I have deemed it acceptable.
+In debug builds it also keeps track of the fps over a five second period and draws a historical fps graph, which is handled through file-level global variables. This implementation is not ideal, however it is only used as a quick debugging tool in development/debug builds of the game, and is compiled out of release builds, so I have deemed it acceptable.
 
-When the game is told to update the game, it just calls the current `Scene`'s update function, providing the current frame time.
+In the `update` method it just calls the current `Scene`'s update method, providing the current frame time.
 
-When it is told to draw the game, it calls the library's `BeginDrawing` and `EndDrawing` functions so that scenes need not be aware of it (which also theoretically allows nested scenes), calls the scene's draw function, and draws an fps counter in the bottom right corner of the screen.
+In the `draw` method it calls the library's `BeginDrawing` and `EndDrawing` functions so that scenes need not be aware of it (which also theoretically allows nested scenes), calls the scene's draw method, and draws an fps counter in the bottom right corner of the screen.
 
-When it is told to change scenes, it will call the scene's `post_draw` function to allow for any updates that needs to be done before scenes are changed but not before the current screen is drawn, and then it transitions to a new scene if instructed to do so by the current scene.
+In the `update_scene` method it will call the scene's `post_draw` function to allow for any updates that needs to be done before scenes are changed but not before the current screen is drawn, and then it transitions to a new scene if instructed to do so by the current scene.
 
 ## The `Scene` Abstraction
 
@@ -164,29 +155,134 @@ The `LevelSelect` scene provides buttons to play specific levels, as well as the
 
 **Files**: [`src/level_scene.cpp`](./src/level_scene.cpp), [`include/level_scene.hpp`](./include/level_scene.hpp)
 
+The `LevelScene` sits in-between a `Level` object and the `Game` object. This allows the `Level` class to focus only on handling what is needed for the level and to not worry about the `Scene` abstraction, as well as allowing levels to be used in multiple different types of scenes (see the next section on the `SingleRun` scene, which also holds a `Level` object).
+
+The `LevelScene` essentially holds and manages a single `Level` object:
+ - It can be constructed either from a `std::unique_ptr<Level>`, or from a level number, in which case it automatically loads that level
+ - It provides functions to load the next level, the previous level, to reload the current level (completely resetting the level), or to exit to the main menu
+   - Exiting to the main menu loads the `MainMenu` scene, switching/reloading levels does not change scenes, but just modifies the content of the current scene
+ - The `update` and `draw` functions are just forwarded to the `Level` object
+ - The `post_draw` function will load the next or previous level, reset the level, exit to the main menu, or do nothing, as instructed by the level
+   - Note that a level just needs to signal "do nothing", "previous level", "next level", "reset level", or "main menu", and is not concerned with the mechanics of loading levels or switching scenes, allowing for clean abstraction and separation of concerns
+
 ### The `SingleRun` Scene
 
 **Files**: [`src/singlerun.cpp`](./src/singlerun.cpp), [`include/singlerun.hpp`](./include/singlerun.hpp)
 
-## The `gui` Module
+The `SingleRun` scene sits between a `Level` object and the `Game` similarly to a `LevelScene`.
 
-**Files**: [`src/gui.cpp`](./src/gui.cpp), [`include/gui.hpp`](./include/gui.hpp)
+However, there is some more tracking going on, as it keeps a tally of the total statistics (time played, number of deaths, etc) across levels, and disables the option to return to the previous level. Additionally, it keeps track if the player is still playing the levels, or if all the levels are completed. When this is the case, it switches modes and instead of `update`ing and `draw`ing a `Level`, it instead displays a win screen with the total statistics across all levels for that run.
 
-## Level Overlays
+At the end of such a challenge run, the player's personal best time for challenge runs is displayed and updated.
 
-**Files**: [`src/overlay.cpp`](./src/overlay.cpp), [`include/overlay.hpp`](./include/overlay.hpp)
+This allows the player to pursue more stamina-based personal bests, completing all levels in one go rather than retrying each individual level multiple times, pursuing an aggregate best time rather than individual best times.
 
 ## Defining and Creating Levels
 
 **Files**: [`src/levels_list.cpp`](./src/levels_list.cpp), [`include/levels_list.hpp`](./include/levels_list.hpp), [`levels/*.png`](./levels/)
 
-### The `Level` Object
+The data for the game's levels is stored in the `Levels` namespace, as well as some functions for loading levels.
 
-**Files**: [`src/level.cpp`](./src/level.cpp), [`include/level.hpp`](./include/level.hpp)
+Each level consists of an image file (stored here as `png`s, but in theory other formats like `bmp` should also work) which specifies the level's layout, a level spawn position (relative to the bottom left of the level, with negative y upwards, specifying the bottom left corner of the player on spawn), and a list of text objects to display above the level's tiles.
+
+Individual levels' data is loaded into the `levels` vector, which is instantiated inside the `levels_list.cpp` file.
+
+There is also a `make_level` function, which takes an index into the `levels` vector and returns a `std::unique_ptr` to the loaded level. If the index is invalid (too large), it returns a `nullptr`, which should in most cases cause an error message and a redirect to the main menu.
 
 ### `Tile`s
 
 **Files**: [`src/level.cpp`](./src/level.cpp), [`include/level.hpp`](./include/level.hpp)
+
+Each level consists of a 2D grid of `Tile`s (although note that the tiles are actually stored in a 1D `std::vector` for performance and reasons). A `Tile` is just a [POD](https://en.wikipedia.org/wiki/Passive_data_structure) struct with some constructors provided for convenience, and all the actual functionality tied to a `Tile` is implemented in the `Level` and `Player` classes.
+
+A tile has a type, a colour, an `in_front` tag, a bounce specification, and a friction value.
+
+There is currently five types of tiles:
+ - `Empty` does not have a hitbox and does not interact with the player at all
+ - `Solid` collides with the player (prevents the player from intersecting with/passing through the tile)
+ - `Danger` kills the player when the player collides (intersects) with it
+ - `Goal` completes the level on player collision (intersection)
+ - `Checkpoint` changes the player's spawn point to its position on collision (intersection)
+
+The colour is used to render the tile, with each tile being rendered as a 1x1 rectangle of the specified colour at the tile's level position. In theory, this can later be replaced by a texture, or some sort of union between a colour and a texture quite easily. (Though some sort of texture index would make more sense, memory-consumption wise, than actually holding a texture directly)
+
+The `in_front` tag determines whether the tile should be drawn behind (before) or in front of (after) the player. By default, tiles should be drawn behind the player, as drawing them in front incurs a slight performance penalty. Semitransparent tiles of type `Empty` or `Checkpoint` are the only tiles likely meant to be drawn in front of the player.
+
+The bounce specification consists of a bounciness factor for the top, bottom, and side of the tile. The bounciness factor is a float in the range 0 to 1, where 0 means a collision with that side of the tile will completely halt all movement into the tile – that is, zero the x velocity if the player is moving into the tile horizontally, or zero the y velocity if the player is moving into the tile vertically – and 1 means a collision with that side of the tile will completely reflect all movement into the tile – so if the player is moving into the tile horizontally they will then move with that same speed away from the tile, and similar for vertical motion. A bounciness factor in between zero and one will reflect only some of the player's velocity.
+
+Note that the bounce specification only has an effect on tiles which collide with the player – currently only `Solid` tiles.
+
+Lastly, the value specifies the player's horizontal deceleration in units per second² if the player is on top of the tile, colliding with the tile (so only on `Solid` tiles), has a horizontal velocity, and isn't holding in left or right movement keys.
+
+A list of `Tile`s usable in levels is defined in the `Levels` namespace at the end of `level.hpp`, as well as a mapping from `Color`s to `Tile`s. This mapping is used to convert images into levels.
+
+### The `Level` Object
+
+**Files**: [`src/level.cpp`](./src/level.cpp), [`include/level.hpp`](./include/level.hpp)
+
+The `Level` class is probably the most complex class in the project, only contested by the `Player` class. It handles a level's tiles, the `Player` object, a camera (`Camera2D` to ease level rendering logic), level statistics, the currently active checkpoint, and some action handles (pausing, resetting, going to the next level).
+
+Conceptually, a level can be in one of three states:
+ - `Active` – the level is currently being played
+ - `Paused` – the pause screen is active, no physics updates are being processed, and a pause screen overlay is displayed
+ - `WinScreen` – the level has been completed, no physics updates are being processed, and a win screen overlay is displayed
+
+Furthermore, it can signal whether the next or previous level should be loaded, the level should be reset, or the main menu should be loaded through a `change` public field. This will then be handled by a `LevelScene` or `SingleRun`, though the `Level` class is not tied to either of these.
+
+A level conceptually consists of a 2D array of `Tile`s and some text objects.
+
+The `Tile`s of a level is stored in a flat `const std::vector` (which cannot be modified after the level has been constructed) along with width and height fields. The index of a `Tile` at a given `(x, y)` position in the tiles vector is easily calculated as `x + y*width` allowing efficient storage (only a single dynamic allocation of contiguous memory, rather than multiple lists of `Tiles` potentially stored in different areas of memory) and access (a single bit of fast pointer arithmetic – roughly `*(tiles + x + y*width)`, a bunch of fast arithmetic operations and a single dereference, possibly optimised down to a single assembly instruction – rather than two levels of dereferencing – roughly `*(*(tiles + x) + y)`).
+
+The text objects are also stored in a vector, each one consisting of a `std::string` to be displayed, the `Color` it should be displayed in, and a level position where it should be displayed.
+
+The `Level` also owns a `Player` object, but the player isn't dealt with directly other than its `update` and `draw` methods being called in the level's own, or it being fed the correct spawn location on respawns.
+
+#### The Camera
+
+The level and the player is rendered within the context of a camera, allowing a given tile to be rendered at a fixed world-space position and then automatically being transformed to the correct screen-space position by the camera.
+
+The camera is roughly centered around the player, with camera movement being governed by three parameters:
+ - camera play (default: four units) specifies how far from the centre of the camera the player can move in the x-axis or y-axis before the camera starts moving to centre the player again
+ - camera follow (default: half a second) specifies the how fast the camera moves – when the camera is moving after the player, its velocity is such that if the player ceased moving and the camera maintained its velocity it would reach the player in the specified amount of time
+ - camera minimum motion time (default: quarter of a second) specifies the minimum amount of time the camera can move for. This is so that if the player moves just outside of the allowed range, the camera smoothly moves closer to the player, rather than edging sideways for one or two frames, resulting in unpleasant, jerky camera movement when the player is moving around slowly
+
+Note also that the camera follows the player's interpolated position rather than the players actual position. The difference between the player's interpolated and actual position is explained later.
+
+#### Deterministic Physics System
+
+In order to allow for consistent level complete times and consistent movement given certain input, a system of deterministic physics was implemented.
+
+This implemented by running physics at a specific, fixed framerate determined by `global::PHYSICS_FPS` rather than whatever the framerate is the game is running at. Currently physics updates occur 32x a second, whereas the target render framerate is 60x a second.
+
+Furthermore, the player's `update` function always operates on a fixed delta time of `1.f / global:PHYSICS_FPS` regardless of the exact time elapsed since the last time a physics update has been implemented. This prevents errors from building up by having a slightly different delta time if a physics tick took two milliseconds faster or ten milliseconds slower, which will then influence acceleration calculations, which will influence velocity calculations, which will influence position calculations.
+
+Instead, each time a physics tick is issued, values change in a predictable and replicable fashion. In theory, this can allow the recording and replaying of inputs to recreate a playthrough, though I have not implemented this yet.
+
+NOTE: for true deterministic physics, I should move away from floating point physics calculations and use my own fixed-point numbers instead, see [this](https://gamedev.stackexchange.com/a/174328) gamedev stackexchange answer.
+
+However, while physics ticks are only handled at the physics framerate, the player's position is interpolated between the previous and current position based on the time elapsed since the previous physics tick for display and camera movement purposes. This allows for smooth, rather than jerky player movement, at the cost of the visual position lagging about 0.03 seconds behind the player's actual position.
+
+#### Rendering
+
+When drawing a level, text objects are drawn first, followed by background tiles, then the player, then foreground tiles, and lastly some UI elements (level number and level time).
+
+If the level is paused or has been beaten, the appropriate overlay is drawn over the rendered level.
+
+The naïve method for rendering the level's tiles would be to iterate through every tile in the level and draw it if it is a background tile, then render the player, then do the same only drawing foreground tiles.
+
+Interestingly enough, this naïve method is enough to render smaller levels at more than a thousand fps on my (relatively old and slow) laptop, and to render even the large levels at more than 100 fps relatively consistently. As such, all additional optimisation is to give myself breathing room to improve visuals later by doing more calculations during rendering, to use less cpu (and thus decrease electricity usage), and to allow older and slower devices to play the game enjoyably, rather than out of strict necessity.
+
+While this is still roughly what I do conceptually, there are three major optimisations I apply, which greatly speeds up rendering for larger levels.
+
+First, I only render visible tiles. I do this by calculating the minimum and maximum x and y values that are within the camera's view, and instead of looping through _all_ x and y values of the level's tiles, I only loop between the calculated minimums and maximums.
+
+The rendering speedup this provide is quite clear: The largest level so far is 32x256 units in size, giving a total of 8,192 tiles to render each frame. In the default window size of 800x600, only about 25x19 tiles are visible, rendering only 475 tiles (17x less!) each frame, or if I fullscreen it on my laptop for a resolution of 1920x1080 about 60x34 tiles are visible, rendering about 2040 tiles (4x less) per frame.
+
+The second optimisation is to skip rendering for tiles which are completely invisible (alpha channel of zero). Since the majority of tiles in any given level is air tiles which are completely invisible, this skips a significant number of draw calls, noticeably improving render times.
+
+The third optimisation is that instead of looping over all the tiles a second time to draw the foreground layer, foreground tiles are added to a vector of tiles to be drawn later during the background loop, and only this vector is looped over in the foreground loop, significantly reducing the number of items looped over a second time (typically 100's or 1000's of items to mere tens or even zero).
+
+Additionally, by calculating the geometry and colour of the foreground tiles in the background loop already, some code duplication is not only avoided, but the foreground loop also consists only of draw calls and no logic or conditionals, which theoretically allows for great optimisation by the compiler as well as just making the loop faster as each iteration does less work.
 
 ## The Player
 
@@ -196,6 +292,31 @@ The `LevelSelect` scene provides buttons to play specific levels, as well as the
 
 **Files**: [`src/stats.cpp`](./src/stats.cpp), [`include/stats.hpp`](./include/stats.hpp)
 
+## The `gui` Module
+
+**Files**: [`src/gui.cpp`](./src/gui.cpp), [`include/gui.hpp`](./include/gui.hpp)
+
+## Level Overlays
+
+**Files**: [`src/overlay.cpp`](./src/overlay.cpp), [`include/overlay.hpp`](./include/overlay.hpp)
+
 ## Utilities
 
 **Files**: [`src/util.cpp`](./src/util.cpp), [`include/util.hpp`](./include/util.hpp)
+
+## Program Entry
+
+**Files**: [`src/main.cpp`](./src/main.cpp)
+
+Setup, teardown, and the main loop is all handled in the program's entry point, located in `src/main.cpp`.
+
+It creates the `Game` object, registers keybindings, reads the game's config file, and initialises the Raylib library.
+
+It then runs the program loop, which does the following, in the provided order:
+ 1. Updates the window width/height global variables to the current size
+ 2. Handles any input events
+ 3. Updates the game
+ 4. Renders the game
+ 5. Tells the game to change scene as necessary
+
+After all that, it deinitialises the Raylib library.
