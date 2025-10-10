@@ -26,7 +26,7 @@ When compiling debug/development builds, the build system passes the `-DDEBUG` f
 
 This allows including code only in debug/dev builds of the game, or only in release builds using `#ifdef`/`#ifndef`/`#else`/`#endif` C Preprocessor directives.
 
-This is used to include a historical fps tracker, player velocity displays, and player real-time hitbox display only in debug builds of the game and not in release builds. Similarly, a keybind to activate flight is also only included in debug builds.
+This is used to include a historical fps tracker, render time display, player velocity displays, and player real-time hitbox display only in debug builds of the game and not in release builds. Similarly, a keybind to activate flight is also only included in debug builds.
 
 The nice thing about conditional inclusion of code, rather than hiding functionality behind flags, is that that code does not increase the size of the executable, it is not sitting unused to be easily enabled by memory editing, and it does not slow down loops by checking a condition that evaluates to `false` each iteration.
 
@@ -284,9 +284,51 @@ The third optimisation is that instead of looping over all the tiles a second ti
 
 Additionally, by calculating the geometry and colour of the foreground tiles in the background loop already, some code duplication is not only avoided, but the foreground loop also consists only of draw calls and no logic or conditionals, which theoretically allows for great optimisation by the compiler as well as just making the loop faster as each iteration does less work.
 
+The current implementation rarely takes more than a single millisecond to render a frame on any level and typically takes less than half a millisecond with a debug build with the game in fullscreen(!). Given that debug builds are compiled with little optimisation (default compiler optimisation level) and release builds are compiled with `-O2`, as well as the fact that debug builds are doing a bunch of extra calculations each second to display historical FPS values, the game compiled in release mode will likely struggle to *not* achieve 60 fps on most semi-modern computers with the game in windowed mode, except when doing other expensive operations like loading levels.
+
 ## The Player
 
 **Files**: [`src/player.cpp`](./src/player.cpp), [`include/player.hpp`](./include/player.hpp)
+
+The player keeps track of its previous and current positions, its velocity, and handles for movement actions as well as one or two other state variables.
+
+### Player Physics
+
+The player's `update` function should only be called on physics ticks, and will always operate on a delta time of `1.f / global::PHYSICS_FPS`.
+
+First, the player's previous position is updated to the current position.
+
+Next, if the player has been killed or the level has been completed, the level is signalled and the `update` function is exited.
+
+Then, if the player is on the ground (colliding with the top of some tiles), the player's state is set as `Grounded` and the number of "coyote frames" (for implementing [coyote time](https://en.wikipedia.org/wiki/Glossary_of_video_game_terms#coyote_time)) is reset. If the player is not on the ground, its state is set to `Airborne` if the coyote time has elapsed, else the number of coyote frames left is decremented.
+
+Next, velocity is calculated:
+ - on jumps and double jumps, the player's upwards velocity is set to the jump velocity
+ - if the player is "slamming" and already on the ground, the players y velocity is completely canceled and set to zero – this enables the player to voluntarily negate tile bounciness
+ - if the player is moving right but inputting a left walking action, decelerate the player by the walking deceleration, and similar for motion/input in the opposite direction
+ - if the player is moving left and inputting a left walking action, then accelerate the player by the walking acceleration, and cap the player's x-velocity to the player's maximum walking speed. Once again, the same is done for motion in the opposite direction
+ - if the player is on the ground, then prevent the player from moving downwards
+   - furthermore, if there isn't a walk left or walk right input, apply the maximum friction from tiles below the player
+ - apply the level's gravitational acceleration, which is doubled if the player is "slamming"
+
+Note that the player can double jump once after jumping, and "slamming" disables a player's double jump.
+
+After velocity is calculated, the player's position is updated.
+
+If the player is moving faster in the x direction, its x position is updated and x collisions resolved first, otherwise its y position is updated and y collisions resolved first. This prevents all sorts of stability issues and glitchiness that occurs when both x and y position is updated and then both x and y collisions are resolved, or when a certain axis is always updated and resolved first.
+
+Collisions are resolved as follows:
+ 1. The player's collider rectangle is calculated
+ 2. All the points one unit apart from above and to the left to below and to the right of the player are looped through
+    1. The tile and tile collider rectangle for that point is queried from the level
+    2. If the tile is of type `Empty` or the collider has width and height zero, the tile is skipped
+    3. Collisions between the player and the tile are calculated
+    4. If the player is not intersecting with the tile, or the player's overlap with the tile in the opposite axis than the one that collisions are being resolved on is too small, the tile is skipped
+    5. If the tile is solid, the player is moved to be adjacent to the tile, and the player's velocity is adjusted according to the tile's bounce factor. Otherwise, the player or level's state is altered as required by the tile the player has collided with
+
+### Player Drawing
+
+The player's `draw` function takes a value between 0 and 1 indicating how much there should be interpolated between the player's previous and current position. The player is then drawn at the selected in-between position as a simple rectangle.
 
 ## Statistics Tracking
 
