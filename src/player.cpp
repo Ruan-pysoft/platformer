@@ -267,13 +267,17 @@ void Player::update(Level &level) {
 	if (jumpstate == JumpState::Grounded) {
 		vel.y = std::min(0.f, vel.y);
 
-		const Vector2 right_below = { pos.x, pos.y + 0.5f };
-		const float friction = std::max(std::max(
-			level.get_tile(right_below.x, right_below.y).friction,
-			level.get_tile(right_below.x - 1, right_below.y).friction
-		), level.get_tile(right_below.x + 1, right_below.y).friction
-		);
 		if (!test_input(MotionInputs::WalkLeft | MotionInputs::WalkRight)) {
+			const float below_y = pos.y + 0.5f;
+			const float below_centre = pos.x;
+			const float below_left = pos.x - size.x/2;
+			const float below_right = pos.x + size.x/2;
+			const float friction = std::max(std::max(
+				level.get_tile(below_centre, below_y).friction,
+				level.get_tile(below_left, below_y).friction
+			), level.get_tile(below_right, below_y).friction
+			);
+
 			if (friction * dt >= std::abs(vel.x)) vel.x = 0;
 			else if (vel.x > 0) vel.x -= friction * dt;
 			else vel.x += friction * dt;
