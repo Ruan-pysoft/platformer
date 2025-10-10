@@ -323,5 +323,7 @@ void Player::draw(float interp) const {
 	const auto x_width = MeasureTextEx(GetFontDefault(), y_vel.c_str(), 1, .1);
 	DrawTextEx(GetFontDefault(), x_vel.c_str(), { visual_pos.x - y_width.x/2, visual_pos.y - size.y - 1.25f }, 1, .1, BLACK);
 	DrawTextEx(GetFontDefault(), y_vel.c_str(), { visual_pos.x - x_width.x/2, visual_pos.y - size.y - 2.5f }, 1, .1, BLACK);
+
+	DrawRectangleLinesEx({ pos.x - size.x/2, pos.y - size.y, size.x, size.y }, 1/16.f, GREEN);
 #endif /* RELEASE */
 }
