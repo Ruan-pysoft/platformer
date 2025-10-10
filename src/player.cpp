@@ -20,7 +20,7 @@ inline constexpr bool test_input(MotionInputs mask, MotionInputs input) {
 
 static constexpr float EPS = 1.0f / 1024;
 
-Player::Player() {
+Player::Player(Stats &stats) : stats(stats) {
 	jump_action = Action::Jump.register_cb([this](float) {
 		inputs |= MotionInputs::Jump;
 	});
@@ -39,7 +39,7 @@ Player::Player() {
 	});
 	#endif
 	suicide_action = Action::Suicide.register_cb([this]() {
-		if (!killed) ++stats.deaths;
+		if (!killed) ++this->stats.deaths;
 		killed = true;
 	});
 	slam_action = Action::Slam.register_cb([this](float) {
@@ -78,9 +78,6 @@ bool Player::on_ground(Level &level) {
 }
 bool Player::test_input(MotionInputs input) {
 	return ::test_input(inputs, input);
-}
-Player::Stats Player::get_stats() const {
-	return stats;
 }
 
 void Player::resolve_collisions_x(Level &level) {
@@ -196,9 +193,7 @@ Vector2 Player::get_pos(float interp) const {
 		prev_pos.y*(1 - interp) + pos.y*interp,
 	};
 }
-void Player::reset(Vector2 pos) {
-	++stats.times_spawned;
-
+void Player::spawn(Vector2 pos) {
 	this->pos = pos;
 	this->prev_pos = pos;
 	this->vel = { 0, 0 };

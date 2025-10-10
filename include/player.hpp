@@ -5,6 +5,7 @@
 #include "raylib.h"
 
 #include "actions.hpp"
+#include "stats.hpp"
 
 enum class JumpState {
 	Grounded,
@@ -27,22 +28,6 @@ enum class MotionInputs : uint8_t {
 
 class Level;
 class Player {
-public:
-	struct Stats {
-		int jumps = 0;
-		int double_jumps = 0;
-		int deaths = 0;
-		int times_spawned = 0;
-
-		void accumulate(const Stats &other) {
-			jumps += other.jumps;
-			double_jumps += other.double_jumps;
-			deaths += other.deaths;
-			times_spawned += other.times_spawned;
-		}
-	};
-
-private:
 	Vector2 prev_pos = { 0, 0 };
 	Vector2 pos = { 0, 0 };
 	Vector2 vel = { 0, 0 };
@@ -59,7 +44,7 @@ private:
 	ActionSustain::cb_handle_t fly_action;
 	#endif
 	ActionOnce::cb_handle_t suicide_action;
-	Stats stats;
+	Stats &stats;
 
 	static constexpr Vector2 size = Vector2 { 1.0f, 2.0f };
 	static constexpr float jump_vel = 13; // set to 13.25 for much easier 8-block double jumps
@@ -74,11 +59,10 @@ private:
 	void resolve_collisions_x(Level &level);
 	void resolve_collisions_y(Level &level);
 public:
-	Player();
+	Player(Stats &stats);
 
 	Vector2 get_pos(float interp) const;
-	void reset(Vector2 pos);
-	Stats get_stats() const;
+	void spawn(Vector2 pos);
 
 	void update(Level &level);
 	void draw(float interp) const;

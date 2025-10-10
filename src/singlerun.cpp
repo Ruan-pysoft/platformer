@@ -24,7 +24,6 @@ SingleRun::SingleRun()
 	text.push_back({ "Challenge completed!", 50, { 0, 12.5 }, true, BLACK });
 	text.push_back({ "", 24, { 0, 75 }, true, BLACK });
 	text.push_back({ "", 24, { 0, 100 }, true, BLACK });
-	text.push_back({ "", 24, { 0, 125 }, true, BLACK });
 }
 SingleRun::~SingleRun() = default;
 
@@ -35,9 +34,7 @@ void SingleRun::next_level() {
 	}
 
 	const int curr = level->get_level_nr();
-	total_stats.accumulate(level->get_stats());
-	total_player_stats.accumulate(level->get_player_stats());
-	--total_player_stats.times_spawned;
+	total_stats += level->get_stats();
 
 	level = Levels::make_level(curr + 1, true);
 	if (level == nullptr) {
@@ -56,8 +53,7 @@ void SingleRun::reset_level() {
 	}
 
 	const int curr = level->get_level_nr();
-	total_stats.accumulate(level->get_stats());
-	total_player_stats.accumulate(level->get_player_stats());
+	total_stats += level->get_stats();
 
 	level = Levels::make_level(curr, true);
 }
@@ -69,65 +65,65 @@ void SingleRun::update(float dt) {
 		if (!initialised_winscreen) {
 			initialised_winscreen = true;
 
-			Level::PBFile pbs{};
-			if (std::filesystem::exists("data/pbs")) {
-				std::ifstream pbs_file("data/pbs");
-				pbs = Level::PBFile::load(pbs_file);
-				pbs_file.close();
-			}
-			auto pb_stats = pbs.get("challenge_run");
+			PBFile pbs_file = PBFile::load();
+			const std::string key = "challenge_run";
+			auto pb = pbs_file.get(key);
 
-			Text &time_text = text[1];
-			if (time_text.text.size() == 0) {
-				time_text.text = "Completion time: ";
-				const int seconds = total_stats.level_ticks / global::PHYSICS_FPS;
-				const int frames = total_stats.level_ticks % global::PHYSICS_FPS;
-				time_text.text += std::to_string(seconds);
-				time_text.text += ";";
-				if (frames < 10) time_text.text += "0";
-				time_text.text += std::to_string(frames);
+			const bool new_pb = pb == nullptr || total_stats.better_than(*pb);
 
-				if (pb_stats != nullptr) {
-					time_text.text += " ; PB: ";
-					const int seconds = pb_stats->first.level_ticks / global::PHYSICS_FPS;
-					const int frames = pb_stats->first.level_ticks % global::PHYSICS_FPS;
-					time_text.text += std::to_string(seconds);
-					time_text.text += ";";
-					if (frames < 10) time_text.text += "0";
-					time_text.text += std::to_string(frames);
-				}
-			}
-			Text &jumps_text = text[2];
-			if (jumps_text.text.size() == 0) {
-				jumps_text.text = "Total jumps: ";
-				jumps_text.text += std::to_string(
-					total_player_stats.jumps + total_player_stats.double_jumps
-				);
+			Text &stats_text = text[1];
+			Text &pb_text = text[2];
 
-				if (pb_stats != nullptr) {
-					jumps_text.text += " ; PB: ";
-					jumps_text.text += std::to_string(pb_stats->second.jumps + pb_stats->second.double_jumps);
-				}
-			}
-			Text &deaths_text = text[3];
-			if (deaths_text.text.size() == 0) {
-				deaths_text.text = "Total deaths/resets: ";
-				deaths_text.text += std::to_string(
-					total_player_stats.times_spawned
-				);
+			const std::string stats_label = "Time / Jumps / Deaths & Resets: ";
+			std::string stats_value;
 
-				if (pb_stats != nullptr) {
-					deaths_text.text += " ; PB: ";
-					deaths_text.text += std::to_string(pb_stats->second.times_spawned);
-				}
+			const unsigned seconds = total_stats.time / global::PHYSICS_FPS;
+			const unsigned frames = total_stats.time % global::PHYSICS_FPS;
+			stats_value += std::to_string(seconds);
+			stats_value += ";";
+			if (frames < 10) stats_value += "0";
+			stats_value += std::to_string(frames);
+
+			stats_value += " / ";
+
+			stats_value += std::to_string(total_stats.total_jumps());
+
+			stats_value += " / ";
+
+			stats_value += std::to_string(total_stats.total_respawns());
+
+			stats_text.text = stats_label + stats_value;
+			if (new_pb) {
+				stats_text.text += " (New PB!)";
 			}
 
-			if (pb_stats == nullptr || pb_stats->first.level_ticks > total_stats.level_ticks) {
-				pbs.set("challenge_run", std::make_pair(total_stats, total_player_stats));
+			const std::string pb_label = "Personal Best: ";
+			std::string pb_value;
 
-				std::ofstream pbs_file("data/pbs");
-				pbs.save(pbs_file);
-				pbs_file.close();
+			if (pb == nullptr) {
+				pb_value = "N/A";
+			} else {
+				const unsigned seconds = pb->time / global::PHYSICS_FPS;
+				const unsigned frames = pb->time % global::PHYSICS_FPS;
+				pb_value += std::to_string(seconds);
+				pb_value += ";";
+				if (frames < 10) pb_value += "0";
+				pb_value += std::to_string(frames);
+
+				pb_value += " / ";
+
+				pb_value += std::to_string(pb->total_jumps());
+
+				pb_value += " / ";
+
+				pb_value += std::to_string(pb->total_respawns());
+			}
+
+			pb_text.text = pb_label + pb_value;
+
+			if (new_pb) {
+				pbs_file.set(key, total_stats);
+				pbs_file.save();
 			}
 		}
 

@@ -12,6 +12,8 @@ const float STAGE_WIDTH = WINDOW_WIDTH / (float)PPU;
 const float STAGE_HEIGHT = WINDOW_HEIGHT / (float)PPU;
 extern bool quit;
 extern const int PHYSICS_FPS;
+extern const char *DATA_DIR;
+extern const char *PERSONAL_BESTS_FILE;
 
 constexpr inline float units(float pixels) {
 	return pixels / PPU;

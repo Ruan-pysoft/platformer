@@ -12,6 +12,7 @@
 #include "actions.hpp"
 #include "overlay.hpp"
 #include "player.hpp"
+#include "stats.hpp"
 
 enum class TileType { Empty, Solid, Danger, Goal, Checkpoint };
 
@@ -48,22 +49,6 @@ class Level {
 public:
 	enum class State { Active, Paused, WinScreen };
 	enum class Change { None, Prev, Next, Reset, MainMenu };
-	struct Stats {
-		int level_ticks = 0;
-
-		void accumulate(const Stats &other) {
-			level_ticks += other.level_ticks;
-		}
-	};
-	struct PBFile {
-		std::unordered_map<std::string, std::pair<Stats, Player::Stats>> pbs{};
-
-		static PBFile load(std::istream &inp);
-		void save(std::ostream &out) const;
-		bool has_pb(std::string key) const;
-		const std::pair<Stats, Player::Stats> *get(std::string key) const;
-		void set(std::string key, std::pair<Stats, Player::Stats> val);
-	};
 
 private:
 	const std::vector<Tile> tiles;
@@ -80,7 +65,7 @@ private:
 	bool has_populated_winscreen = false;
 	Overlay win_overlay;
 	float frame_acc = 0;
-	Stats stats {};
+	Stats stats{};
 	bool continuous = false;
 	std::optional<Vector2> active_checkpoint = {};
 
@@ -101,8 +86,7 @@ public:
 
 	Vector2 get_offset() const;
 	int get_level_nr() const;
-	Stats get_stats() const;
-	Player::Stats get_player_stats() const;
+	const Stats &get_stats() const;
 
 	Level(
 		size_t level_nr, const Tile *tilemap, int w, int h,

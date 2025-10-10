@@ -15,8 +15,7 @@ class SingleRun : public Scene {
 
 	std::unique_ptr<Level> level = nullptr;
 	bool sent_to_main_menu = false;
-	Level::Stats total_stats = {};
-	Player::Stats total_player_stats = {};
+	Stats total_stats = {};
 	State state = State::Playing;
 	bool initialised_winscreen = false;
 	std::vector<Text> text = {};

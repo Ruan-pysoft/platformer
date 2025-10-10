@@ -24,15 +24,18 @@ int main() {
 		map.action.register_key(map.key);
 	}
 
-	if (!std::filesystem::exists("data/")) {
-		if (!std::filesystem::create_directory("data/")) {
+	if (!std::filesystem::exists(global::DATA_DIR)) {
+		if (!std::filesystem::create_directory(global::DATA_DIR)) {
 			std::cerr << "Failed creating game data folder!" << std::endl;
 			return 1;
 		}
 	}
 
-	if (std::filesystem::exists("data/game.cfg")) {
-		std::ifstream cfg_file("data/game.cfg");
+	std::string config_file_name;
+	config_file_name += global::DATA_DIR;
+	config_file_name += "game.cfg";
+	if (std::filesystem::exists(config_file_name)) {
+		std::ifstream cfg_file(config_file_name);
 		global::config = Config::read(cfg_file);
 		cfg_file.close();
 	} else {
@@ -40,7 +43,7 @@ int main() {
 	}
 
 	if (global::config.had_uninits) {
-		std::ofstream cfg_file("game.cfg");
+		std::ofstream cfg_file(config_file_name);
 		global::config.write(cfg_file);
 		cfg_file.close();
 	}
@@ -103,6 +106,8 @@ int WINDOW_WIDTH = 800 * SCALE;
 int WINDOW_HEIGHT = 600 * SCALE;
 bool quit = false;
 const int PHYSICS_FPS = 32;
+const char *DATA_DIR = "data/";
+const char *PERSONAL_BESTS_FILE = "personal_bests.dat";
 
 const int PPU = 20 * SCALE;
 
