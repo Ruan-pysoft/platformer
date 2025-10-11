@@ -1,14 +1,32 @@
 # A Platformer Game in Raylib
 
-My submission for our CMPG121 project (2025).
+A simple 2D platformer implemented in C++ with Raylib. Created as my CMPG121 semester project (2025).
 
 ## Documentation
 
-Features are documented in [`features.md`](./features.md), program architecture is documented in [`architecture.md`](./architecture.md).
+Features are listed in [`features.md`](./features.md), program architecture is documented in [`architecture.md`](./architecture.md).
 
-I plan on adding slideshows soon.
+Slides and more extensive comments coming soon, in theory?
 
-I will also add comments to the headers and (more selectively) source files.
+### Overview & Summary
+
+This is a simple platformer game implemented in C++ using the [Raylib](https://www.raylib.com/) library. It will be submitted as my semester project for CMPG121.
+
+The features of the game include:
+ - Deterministic physics
+ - Coyote time
+ - Level timers and personal best tracking (greatly increases fun and replayability)
+ - Image-based level loading
+
+The game is built around a `Game` object which manages `Scene`s such as menus or levels.
+
+Each `Scene` type implements its own `draw` and `update` function to handle physics, display, and user interaction. Levels are loaded from image files based on pre-defined tiles, and the player interacts with the level using a fixed-timestep physics simulation. Keyboard input is handled through the `InputManager` abstraction, which communicates with various `Action*` objects.
+
+Resource management is done entirely via RAII, with standard containers being used for memory allocations and handle types that deregister resources upon destructions. This entirely alleviates the need for manual memory management without introducing garbage collection, as well as simplifying other resource management concerns. The program loop handles inputs, physics updates/user interaction, drawing, and scene transitions in that order, and attempts to run at the game's target FPS (60).
+
+For more information, see [`architecture.md`](./architecture.md). Additionally, you might want to work through some AI-generated docs at [deepwiki.com](https://deepwiki.com/Ruan-pysoft/platformer), which might be a bit wonky or surface-level at times, however it does come with an AI chatbot which could explain some things if you're struggling to understand something. Note however that the repo was indexed before Code::Blocks support was added, so it unfortunately won't be able to help you much with compiling with Code::Blocks.
+
+Note that `architecture.md` was written by hand, with inputs wrt structuring/ordering taken from ChatGPT. It is not in any way influenced by any AI-generated docs (it was written before the repo was indexed by deepwiki, and ChatGPT didn't have the context to write effective or coherent docs anyways).
 
 ## How to Compile and Run
 
@@ -36,6 +54,8 @@ Once the build has been configured, you can build and run the game with `./nob r
 
 ## Licensing
 
+First note that this *is* a university project, so I'll just note here that while copying this project and claiming it as your own might not be *illegal*, it would still be plagiarism and subject to university disciplinary procedures. So don't try passing it off as your own project, because it's not. That being said, here be my ramblings on copying my code:
+
 This library is set free under the [Unlicense](https://unlicense.org/).
 This means that it is released into the public domain
 for all to use as they see fit.
@@ -47,8 +67,6 @@ I only ask (as a request in the name of common courtesy,
 **not** as a legal requirement of any sort)
 that you do not claim this work as your own
 but credit me as appropriate.
-
-Also, this *is* a university project, so I'll just note here that while copying this project and claiming it as your own might not be *illegal*, it would still be plagiarism and subject to university disciplinary procedures. So don't try passing it off as your own project, because it's not.
 
 The full terms are as follows:
 
