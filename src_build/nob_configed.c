@@ -291,6 +291,11 @@ bool build_game(void) {
 		// open-source anyways)
 		cmd_append(&cmd, "strip", outfile);
 		if (!cmd_run(&cmd)) return false;
+#elif defined(RELEASE) && defined(WINDOWS)
+		// only strip debug symbols on Windows to hopefully not trigger
+		// Windows Defender?
+		cmd_append(&cmd, "x86_64-w64-mingw32-strip", "--strip-debug", outfile);
+		if (!cmd_run(&cmd)) return false;
 #endif
 	} else nob_log(INFO, "Game executable is up-to-date, not rebuilding!");
 
