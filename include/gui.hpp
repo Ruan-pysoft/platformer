@@ -7,6 +7,11 @@
 
 #include "globals.hpp"
 
+/*
+ * some utilities for drawing GUI elements
+ * (essentially a basic immediate-mode GUI library)
+ */
+
 struct GuiBox {
 	Vector2 pos;
 	Vector2 size;

@@ -269,6 +269,7 @@ void Level::update(float dt) {
 		} break;
 		case Level::State::WinScreen: {
 			if (!has_populated_winscreen) {
+				// populate win screen with level stats
 				has_populated_winscreen = true;
 
 				PBFile pbs_file = PBFile::load();
@@ -340,6 +341,7 @@ void Level::update(float dt) {
 
 	if (state != Level::State::Active) return;
 
+	// only update the player's physics on each physics tick
 	frame_acc += dt;
 	const bool physics_tick = frame_acc >= 1.0f/global::PHYSICS_FPS;
 	if (physics_tick) {
@@ -405,6 +407,7 @@ void Level::draw() const {
 	const int x_min = std::max(viewport_left, 0.f);
 	const int x_max = std::min(viewport_right, float(w-1));
 
+	// only loop over visible tiles
 	for (int y = y_min; y <= y_max; ++y) {
 		for (int x = x_min; x <= x_max; ++x) {
 			const Vector2 pos = { x + offset.x, y + offset.y };
@@ -418,6 +421,8 @@ void Level::draw() const {
 			const float adj = (1 - factor)/2;
 			const auto color = tiles[x + y*w].color;
 
+			// don't draw invisible tiles
+			// (actually saves a lot of time!)
 			if (color.a == 0) continue; // don't draw invisible tiles
 
 			const Rectangle rect = {
@@ -425,6 +430,9 @@ void Level::draw() const {
 				size.x*factor, size.y*factor
 			};
 
+			// save tiles that should be drawn after the player to
+			// a vector, rather than looping over the tiles again
+			// later
 			if (tiles[x + y*w].in_front) {
 				draw_after.push_back(std::make_pair(rect, color));
 			} else {

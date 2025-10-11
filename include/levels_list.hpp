@@ -8,6 +8,11 @@
 
 #include "level.hpp"
 
+/*
+ * defines level data for all the playable levels
+ * provides some utility functions for loading levels too
+ */
+
 namespace Levels {
 
 struct LevelInfo {

@@ -5,6 +5,10 @@
 #include "gui.hpp"
 #include "scene.hpp"
 
+/*
+ * Defines the level select screen
+ */
+
 class LevelSelect : public Scene {
 	Text heading;
 	std::vector<Button> level_buttons;

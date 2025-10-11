@@ -4,6 +4,10 @@
 
 #include "scene.hpp"
 
+/*
+ * Manages the scene interface for playing a single level
+ */
+
 class Level;
 class LevelScene : public Scene {
 	std::unique_ptr<Level> level;

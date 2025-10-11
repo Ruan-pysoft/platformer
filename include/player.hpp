@@ -7,6 +7,8 @@
 #include "actions.hpp"
 #include "stats.hpp"
 
+// class for handling physics simulation and rendering of the player
+
 enum class JumpState {
 	Grounded,
 	Airborne,

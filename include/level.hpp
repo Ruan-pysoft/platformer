@@ -12,6 +12,11 @@
 #include "player.hpp"
 #include "stats.hpp"
 
+/*
+ * the main core of the game:
+ * handles the 2D array of tiles, the player, and the camera
+ */
+
 enum class TileType { Empty, Solid, Danger, Goal, Checkpoint };
 
 struct Tile {
@@ -115,6 +120,8 @@ public:
 };
 
 namespace Levels {
+
+// pre-defined tiles and colour associations for loading from images
 
 static constexpr Tile floor = Tile(BLACK);
 static constexpr Tile air = Tile();

@@ -3,6 +3,8 @@
 #include <string>
 #include <unordered_map>
 
+// structures for keeping track of and storing level statistics
+
 struct Stats {
 	unsigned time = 0; // ticks
 	unsigned jumps = 0;

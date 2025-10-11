@@ -4,6 +4,10 @@
 
 #include "scene.hpp"
 
+// the game class implements all the program logic;
+// the main function just handles library setup and teardown as well as the
+// program loop
+
 class Game {
 	std::unique_ptr<Scene> scene;
 public:

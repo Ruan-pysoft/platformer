@@ -9,6 +9,7 @@
 #include "main_menu.hpp"
 #include "scene.hpp"
 
+// historical fps view, only compiled into debug builds
 #ifdef DEBUG
 #define FPS_BUFFER_SIZE (1 << 8)
 #define FPS_BUFFER_PERIOD 5.0f
@@ -35,12 +36,18 @@ void Game::set_scene(std::unique_ptr<Scene> new_scene) {
 		return;
 	}
 
+	// the previous scene's std::unique_ptr goes out of scope at the end of
+	// this function, which then calls the std::unique_ptr's destructor,
+	// which calls the scene's destructor and then deallocates the memory.
+	// In this way resource cleanup and memory deallocation is handled
+	// without any programmer intervention or runtime garbage collection
 	scene.swap(new_scene);
 }
 
 void Game::update() {
 	const float dt = GetFrameTime();
 
+	// update the historical fps view (only in debug builds)
 #ifdef DEBUG
 	static float acc_dt = 0;
 	static int acc_frames = 0;
@@ -81,6 +88,8 @@ void Game::draw() const {
 		global::WINDOW_HEIGHT - fps_height - fps_margin
 	);
 
+	// display both the historical fps view as well as the time spent
+	// drawing the frame (only debug builds)
 #ifdef DEBUG
 	WaitTime(42. / 1000 / 1000);
 	const double post_draw_time = GetTime();
@@ -129,6 +138,7 @@ void Game::draw() const {
 	EndDrawing();
 }
 void Game::update_scene() {
+	// check if scenes should be switched
 	scene->post_draw();
 	if (scene->transition.next) set_scene(std::move(scene->transition.next));
 }

@@ -2,6 +2,11 @@
 
 #include <memory>
 
+/*
+ * Defines the basic interface used by different scenes
+ * No implementation is provided, only an API
+ */
+
 class Scene;
 struct SceneTransition {
 	std::unique_ptr<Scene> next;

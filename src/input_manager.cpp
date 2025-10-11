@@ -6,6 +6,7 @@ InputManager::InputManager()
 : pressCallbacks{}, releaseCallbacks{}, sustainCallbacks{} { }
 
 InputManager& InputManager::get() {
+	// Return a reference to the single, global InputManager instance
 	static InputManager instance{};
 
 	return instance;

@@ -7,6 +7,11 @@
 #include "player.hpp"
 #include "scene.hpp"
 
+/*
+ * Manages the scene interface for playing all levels sequentially in a single
+ * go
+ */
+
 class SingleRun : public Scene {
 	enum class State {
 		Playing,

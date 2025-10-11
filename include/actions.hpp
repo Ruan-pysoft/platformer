@@ -5,9 +5,21 @@
 #include <unordered_map>
 
 #include "raylib.h"
+
+/*
+ * Abstraction over InputManager, allows regestering multiple callbacks to a
+ * single keyboard key, as well as regestering the same group of callbacks to
+ * multiple keyboard keys
+ */
+
 template<typename T>
 using callback_map_t = std::unordered_map<uint32_t, T>;
 
+// The CallbackHandle class automatically disassociates the associated callback
+// from the action when it is destroyed, allowing callback deregistration to be
+// handled via RAII rather than done manually (requiring manual destructor
+// definitions, and it could easily be missed causing SEGFAULTS when closures
+// try to refer to deallocated memory)
 template<typename T>
 class CallbackHandle {
 	callback_map_t<T> *map;
@@ -16,6 +28,7 @@ public:
 	CallbackHandle() : map(nullptr), id(0) { }
 	CallbackHandle(callback_map_t<T> &map, uint32_t id) : map(&map), id(id) { }
 	~CallbackHandle() {
+		// simply detach upon destruction
 		detach();
 	}
 
@@ -36,12 +49,15 @@ public:
 	}
 
 	void detach() {
+		// to detach, erase the callback from the callback map using
+		// its ID
 		if (map) map->erase(id);
 		map = nullptr;
 		id = 0;
 	}
 };
 
+// an action which is called only when a key is pressed or released
 class ActionOnce {
 public:
 	using cb_t = std::function<void()>;
@@ -58,6 +74,7 @@ public:
 	void trigger() const;
 };
 
+// an action which calls one callback on key press and another on key release
 class ActionStartStop {
 public:
 	using cb_t = std::function<void()>;
@@ -79,6 +96,7 @@ public:
 	void release();
 };
 
+// an action which is called every frame that the key is held
 class ActionSustain {
 public:
 	using cb_t = std::function<void(float)>;
@@ -97,6 +115,8 @@ public:
 
 namespace Action {
 
+// here comes the list of actions the program is aware of
+
 extern ActionSustain Jump;
 extern ActionOnce DoubleJump;
 extern ActionSustain Slam;
@@ -110,6 +130,8 @@ extern ActionOnce Suicide;
 extern ActionOnce Reset;
 extern ActionOnce Pause;
 extern ActionOnce NextLevel;
+
+// here comes the key associations for the actions
 
 static const struct {
 	KeyboardKey key;

@@ -36,6 +36,7 @@ LevelSelect::LevelSelect()
 	int row = 0;
 	int col = 0;
 
+	// dynamically create the buttons for the available levels
 	for (int i = 0; i < int(Levels::levels.size()); ++i) {
 		const int lvl_idx = i;
 		const std::string lvl_str = std::to_string(i+1);
