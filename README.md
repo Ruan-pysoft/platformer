@@ -52,6 +52,12 @@ You can now (optionally) edit `build/config.h` to select if you want a release o
 
 Once the build has been configured, you can build and run the game with `./nob run`. Note that to cross compile for windows, you'll have to download and extract raylib v5.5 files as explained above in the "Windows with Code::Blocks" section.
 
+### Precompiled
+
+Precompiled builds are available from the "Releases" tab on GitHub. I recommend downloading the `game-release-v0.1.1.zip` file and extracting it to its own folder, from where you can run the game.
+
+If you download the executable directly rather than the zip file, you'll have to also download the levels (`levels-v0.1.1.zip`) and unzip the `levels/` folder next to your executable, otherwise the game won't be able to load the levels.
+
 ## Licensing
 
 First note that this *is* a university project, so I'll just note here that while copying this project and claiming it as your own might not be *illegal*, it would still be plagiarism and subject to university disciplinary procedures. So don't try passing it off as your own project, because it's not. That being said, here be my ramblings on copying my code:
