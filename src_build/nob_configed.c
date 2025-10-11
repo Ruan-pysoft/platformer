@@ -284,7 +284,7 @@ bool build_game(void) {
 
 		if (!cmd_run(&cmd)) return false;
 
-#ifdef RELEASE
+#if defined(RELEASE) && !defined(WINDOWS)
 		// and strip the exe on release builds, results in a smaller
 		// exe (and theoretically harder to reverse-engineer, but I
 		// don't really care about that, I plan on having this
