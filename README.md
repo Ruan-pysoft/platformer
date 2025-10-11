@@ -12,6 +12,12 @@ Slides and more extensive comments coming soon, in theory?
 
 This is a simple platformer game implemented in C++ using the [Raylib](https://www.raylib.com/) library. It will be submitted as my semester project for CMPG121.
 
+Use WASD or arrow keys to move. [Vim](https://en.wikipedia.org/wiki/Vim_\(text_editor\)) motion keys are also available.
+
+Use the `Escape` key to access the pause menu.
+
+Additionally, the `R` key can be used to restart the level, and the `X` key can be used to kill the player (teleports to last spawn point). `Enter` and `Space` can be used to advance to the next level. In debug builds, the `F` key allows the player to fly; this is compiled out of release builds.
+
 The features of the game include:
  - Deterministic physics
  - Coyote time
