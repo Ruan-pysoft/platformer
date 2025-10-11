@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="cmpg121_raylib_project" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/cmpg121_raylib_project" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DDEBUG" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/cmpg121_raylib_project" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-O2" />
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-Wextra" />
+			<Add option="-fexceptions" />
+			<Add directory="include/" />
+			<Add directory="raylib/src/" />
+		</Compiler>
+		<Linker>
+			<Add library="raylib-5.5_win64_mingw-w64/lib/libraylib.a" />
+		</Linker>
+		<Unit filename="README.md" />
+		<Unit filename="include/actions.hpp" />
+		<Unit filename="include/config.hpp" />
+		<Unit filename="include/entity.hpp" />
+		<Unit filename="include/game.hpp" />
+		<Unit filename="include/globals.hpp" />
+		<Unit filename="include/gui.hpp" />
+		<Unit filename="include/input_manager.hpp" />
+		<Unit filename="include/level.hpp" />
+		<Unit filename="include/level_scene.hpp" />
+		<Unit filename="include/level_select.hpp" />
+		<Unit filename="include/levels_list.hpp" />
+		<Unit filename="include/main_menu.hpp" />
+		<Unit filename="include/overlay.hpp" />
+		<Unit filename="include/player.hpp" />
+		<Unit filename="include/scene.hpp" />
+		<Unit filename="include/singlerun.hpp" />
+		<Unit filename="include/stats.hpp" />
+		<Unit filename="include/util.hpp" />
+		<Unit filename="raylib/src/config.h" />
+		<Unit filename="raylib/src/raylib.h" />
+		<Unit filename="raylib/src/raymath.h" />
+		<Unit filename="raylib/src/rcamera.h" />
+		<Unit filename="raylib/src/rgestures.h" />
+		<Unit filename="raylib/src/rlgl.h" />
+		<Unit filename="raylib/src/utils.h" />
+		<Unit filename="src/actions.cpp" />
+		<Unit filename="src/config.cpp" />
+		<Unit filename="src/game.cpp" />
+		<Unit filename="src/gui.cpp" />
+		<Unit filename="src/input_manager.cpp" />
+		<Unit filename="src/level.cpp" />
+		<Unit filename="src/level_scene.cpp" />
+		<Unit filename="src/level_select.cpp" />
+		<Unit filename="src/levels_list.cpp" />
+		<Unit filename="src/main.cpp" />
+		<Unit filename="src/main_menu.cpp" />
+		<Unit filename="src/overlay.cpp" />
+		<Unit filename="src/player.cpp" />
+		<Unit filename="src/singlerun.cpp" />
+		<Unit filename="src/stats.cpp" />
+		<Unit filename="src/util.cpp" />
+		<Extensions>
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

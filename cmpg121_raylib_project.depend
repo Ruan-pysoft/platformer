@@ -1,0 +1,284 @@
+# depslib dependency file v1.0
+1760196344 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/config.cpp
+	"config.hpp"
+	<iostream>
+	<optional>
+
+1760195995 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/config.hpp
+	<istream>
+
+1760095335 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/actions.cpp
+	"actions.hpp"
+	<iostream>
+	"raylib.h"
+	"input_manager.hpp"
+
+1760197087 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/actions.hpp
+	<cstdint>
+	<functional>
+	<unordered_map>
+	"raylib.h"
+
+1758983913 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/raylib/src//raylib.h
+	<stdarg.h>
+	<stdbool.h>
+
+1760196551 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/input_manager.hpp
+	<functional>
+	<unordered_map>
+	"raylib.h"
+
+1760197593 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/game.cpp
+	"game.hpp"
+	<iostream>
+	<memory>
+	"raylib.h"
+	"globals.hpp"
+	"main_menu.hpp"
+	"scene.hpp"
+
+1760197412 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/game.hpp
+	<memory>
+	"scene.hpp"
+
+1760198613 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/scene.hpp
+	<memory>
+
+1760109849 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/globals.hpp
+
+1760198637 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/main_menu.hpp
+	"gui.hpp"
+	"scene.hpp"
+
+1760199907 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/gui.hpp
+	<functional>
+	<string>
+	"raylib.h"
+	"globals.hpp"
+
+1759327404 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/gui.cpp
+	"gui.hpp"
+	"raylib.h"
+
+1760196575 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/input_manager.cpp
+	"input_manager.hpp"
+	"raylib.h"
+
+1760200077 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/level.cpp
+	"level.hpp"
+	<algorithm>
+	<iostream>
+	<memory>
+	<optional>
+	<string>
+	"raylib.h"
+	"actions.hpp"
+	"globals.hpp"
+	"levels_list.hpp"
+	"player.hpp"
+
+1760199798 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/level.hpp
+	<memory>
+	<optional>
+	<string>
+	<vector>
+	"raylib.h"
+	"actions.hpp"
+	"overlay.hpp"
+	"player.hpp"
+	"stats.hpp"
+
+1760199937 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/overlay.hpp
+	<vector>
+	"gui.hpp"
+
+1760199836 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/player.hpp
+	<cstdint>
+	"raylib.h"
+	"actions.hpp"
+	"stats.hpp"
+
+1760199858 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/stats.hpp
+	<string>
+	<unordered_map>
+
+1760198864 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/levels_list.hpp
+	<memory>
+	<string>
+	<vector>
+	"raylib.h"
+	"level.hpp"
+
+1760100411 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/level_scene.cpp
+	"level_scene.hpp"
+	<memory>
+	"level.hpp"
+	"levels_list.hpp"
+	"main_menu.hpp"
+
+1760198761 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/level_scene.hpp
+	<memory>
+	"scene.hpp"
+
+1760198706 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/level_select.cpp
+	"level_select.hpp"
+	<memory>
+	<string>
+	"raylib.h"
+	"level_scene.hpp"
+	"levels_list.hpp"
+	"main_menu.hpp"
+	"singlerun.hpp"
+
+1760198679 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/level_select.hpp
+	<vector>
+	"gui.hpp"
+	"scene.hpp"
+
+1760198823 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/singlerun.hpp
+	<memory>
+	"gui.hpp"
+	"level.hpp"
+	"player.hpp"
+	"scene.hpp"
+
+1760100680 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/levels_list.cpp
+	"levels_list.hpp"
+
+1760135384 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/main.cpp
+	"raylib.h"
+	<filesystem>
+	<fstream>
+	<iostream>
+	"actions.hpp"
+	"config.hpp"
+	"input_manager.hpp"
+	"game.hpp"
+	"globals.hpp"
+
+1760198655 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/main_menu.cpp
+	"main_menu.hpp"
+	<memory>
+	"raylib.h"
+	"globals.hpp"
+	"level_scene.hpp"
+	"level_select.hpp"
+
+1759573824 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/overlay.cpp
+	"overlay.hpp"
+	"globals.hpp"
+
+1760136655 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/player.cpp
+	"player.hpp"
+	<algorithm>
+	"level.hpp"
+	"raylib.h"
+	"util.hpp"
+
+1760199969 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include/util.hpp
+	"raylib.h"
+
+1760127109 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/singlerun.cpp
+	"singlerun.hpp"
+	<iostream>
+	<memory>
+	<string>
+	"globals.hpp"
+	"level.hpp"
+	"levels_list.hpp"
+	"main_menu.hpp"
+
+1760099267 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/stats.cpp
+	"stats.hpp"
+	"globals.hpp"
+	<filesystem>
+	<fstream>
+	<iostream>
+
+1759466475 source:/home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/src/util.cpp
+	"util.hpp"
+
+1760197087 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//actions.hpp
+	<cstdint>
+	<functional>
+	<unordered_map>
+	"raylib.h"
+
+1760196551 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//input_manager.hpp
+	<functional>
+	<unordered_map>
+	"raylib.h"
+
+1760195995 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//config.hpp
+	<istream>
+
+1760197412 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//game.hpp
+	<memory>
+	"scene.hpp"
+
+1760198613 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//scene.hpp
+	<memory>
+
+1760109849 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//globals.hpp
+
+1760198637 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//main_menu.hpp
+	"gui.hpp"
+	"scene.hpp"
+
+1760199907 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//gui.hpp
+	<functional>
+	<string>
+	"raylib.h"
+	"globals.hpp"
+
+1760199798 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//level.hpp
+	<memory>
+	<optional>
+	<string>
+	<vector>
+	"raylib.h"
+	"actions.hpp"
+	"overlay.hpp"
+	"player.hpp"
+	"stats.hpp"
+
+1760199937 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//overlay.hpp
+	<vector>
+	"gui.hpp"
+
+1760199836 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//player.hpp
+	<cstdint>
+	"raylib.h"
+	"actions.hpp"
+	"stats.hpp"
+
+1760199858 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//stats.hpp
+	<string>
+	<unordered_map>
+
+1760198864 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//levels_list.hpp
+	<memory>
+	<string>
+	<vector>
+	"raylib.h"
+	"level.hpp"
+
+1760198761 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//level_scene.hpp
+	<memory>
+	"scene.hpp"
+
+1760198679 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//level_select.hpp
+	<vector>
+	"gui.hpp"
+	"scene.hpp"
+
+1760198823 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//singlerun.hpp
+	<memory>
+	"gui.hpp"
+	"level.hpp"
+	"player.hpp"
+	"scene.hpp"
+
+1760199969 /home/ruan/Documents/programmeering/cpp/cmpg121_raylib_project/include//util.hpp
+	"raylib.h"
+
