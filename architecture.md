@@ -350,17 +350,54 @@ The player's `draw` function takes a value between 0 and 1 indicating how much t
 
 **Files**: [`src/stats.cpp`](./src/stats.cpp), [`include/stats.hpp`](./include/stats.hpp)
 
+Statistics is truct via the `Stats` [POD](https://en.wikipedia.org/wiki/Passive_data_structure) struct, which keeps track of various stats such as level complete time in physics ticks, number of double jumps, or number of deaths.
+
+It comes with definitions for the `+` and `+=` operators to easily accumulate statistics to keep track of stats across levels (used in the challenge run), and comes with a `better_than` method which provides an ordering of statistics. This is used to determine if a personal best has been improved on.
+
+Currently, for ordering completion time is considered first, then deaths and respawns, and lastly jumps.
+
+The `stats` module also defines the `PBFile` class, which is used to access and update the player's personal bests as stored in the game's data folder.
+
 ## The `gui` Module
 
 **Files**: [`src/gui.cpp`](./src/gui.cpp), [`include/gui.hpp`](./include/gui.hpp)
+
+This module provides some basic [immediate mode](https://en.wikipedia.org/wiki/Immediate_mode_\(computer_graphics\)#Immediate_mode_GUI) abstractions for some gui elements, currently `Button`s and `Text`. It also provides the `GuiBox` type, which defines a position and size, but allows for centering an element along the x axis and/or the y axis automatically; compare to Raylib's `Rectangle` struct which doesn't allow automatic centering.
+
+A `Button` has the following fields:
+ - a callback to be called when it is clicked
+ - a `GuiBox` defining the button's position and size
+ - the text to display on the button, along with the font size
+ - Three colours: the button's background colour when focused and unfocused, as well as the text colour
+A `Button` comes with an `update` and a `draw` function. The `update` function handles user interaction.
+
+A `Text` object comes with the following fields:
+ - the text to display along with the font size
+ - the position of the text
+ - whether the text should be horizontally centered
+ - the colour of the text
+The `Text` struct comes only with a `draw` function, as it does not interact with the user (therefore an `update` function would be superfluous)
 
 ## Level Overlays
 
 **Files**: [`src/overlay.cpp`](./src/overlay.cpp), [`include/overlay.hpp`](./include/overlay.hpp)
 
+An `Overlay` is a collection of `Text` and `Button` objects, drawn with a semitransparent background, along with utility methods to add and access the `Text` and `Button` elements.
+
+It was added as a more convenient way to handle level overlays than polluting the level class with a bunch of `Text` and `Button` fields.
+
 ## Utilities
 
 **Files**: [`src/util.cpp`](./src/util.cpp), [`include/util.hpp`](./include/util.hpp)
+
+### Collision Detection
+
+The `collide` function preforms collision between two rectangular bounding boxes. Its result is in the form of a `Collision` struct.
+
+The collision struct contains the following fields:
+ - `dist` is the signed distance that the objects overlap; if it is added to the first rectangle's position, the two rectangles will no longer overlap
+ - `new_pos` contains the position that the first rectangle would have to be moved to to avoid overlap. In theory this is unneeded in light of `dist`, but using `new_pos` rather than `dist` removes floating-point error
+ - `x_touches` and `y_touches` indicates whether the two bounding boxes are touching/overlapping on the x and y axes, respectively
 
 ## Program Entry
 

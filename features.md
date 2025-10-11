@@ -15,3 +15,4 @@
    - Debug utilities: fps & player velocity views, fly cheats
  - Tile bounce and friction
  - Levels editable in image editor
+ - Coyote time
