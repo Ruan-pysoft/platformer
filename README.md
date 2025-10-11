@@ -10,6 +10,30 @@ I plan on adding slideshows soon.
 
 I will also add comments to the headers and (more selectively) source files.
 
+## How to Compile and Run
+
+### Windows with Code::Blocks
+
+First, open the project ([`cmpg121_raylib_project.cbp`](./cmpg121_raylib_project.cbp)) in Code::Blocks.
+
+Download the windows raylib library from GitHub, specifically the [raylib-5.5_win64_mingw-w64.zip](https://github.com/raysan5/raylib/releases/download/5.5/raylib-5.5_win64_mingw-w64.zip) file.
+
+Extract the zip file into the project (so the `raylib-5.5_win64_mingw-w64` folder containing the `include` and `lib` folders must be in the same folder as the `cmpg121_raylib_project.cbp` file).
+
+Select the "Build and Run" button (or press F9) to build and run the program. By default a Release build is created, you can also switch to a Debug build to enable some debug overlays as well as a fly key (F).
+
+### Linux with the Terminal
+
+On Linux, builds are done with the [nob.h](https://github.com/tsoding/nob.h) library.
+
+First, bootstrap the build script by compiling nob with `cc -o nob nob.c`.
+
+Now, generate the build config with `./nob init`.
+
+You can now (optionally) edit `build/config.h` to select if you want a release or debug build, native linux or cross-compiled windows build, or wayland-native or x11-native build by commenting or uncommenting the options.
+
+Once the build has been configured, you can build and run the game with `./nob run`. Note that to cross compile for windows, you'll have to download and extract raylib v5.5 files as explained above in the "Windows with Code::Blocks" section.
+
 ## Licensing
 
 This library is set free under the [Unlicense](https://unlicense.org/).

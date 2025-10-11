@@ -38,7 +38,10 @@
 			<Add directory="raylib/src/" />
 		</Compiler>
 		<Linker>
-			<Add library="raylib-5.5_win64_mingw-w64/lib/libraylib.a" />
+			<Add library="libraylib.a" />
+			<Add library="winmm" />
+			<Add library="gdi32" />
+			<Add directory="raylib-5.5_win64_mingw-w64/lib" />
 		</Linker>
 		<Unit filename="README.md" />
 		<Unit filename="include/actions.hpp" />
