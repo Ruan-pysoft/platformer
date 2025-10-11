@@ -66,6 +66,12 @@ Currently, the global values are:
 
 **Files**: [`src/config.cpp`](./src/config.cpp), [`include/config.hpp`](./include/config.hpp)
 
+Options which are retained across starts of the game are stored in the `Config` structure. Note that there currently aren't many such values.
+
+The `Config` struct consists of fields of the types and names of the different config entries. It then supplies read and write methods to read and write config to/from a stream. It also has a `had_uninits` flag which is used to determine if a write is needed.
+
+The functions for reading and writing the config is implemented with a lot of help from C preprocessor macros to make repetitive tasks easier and reduce code duplication.
+
 ## Input Handling
 
 ### Base Abstraction

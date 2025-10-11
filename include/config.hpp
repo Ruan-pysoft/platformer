@@ -2,8 +2,13 @@
 
 #include <istream>
 
+/*
+ * A simple struct for keeping track of program config across runs
+ */
+
 enum class WindowState { Windowed, Borderless, Fullscreen };
 
+// this is an X macro, see https://en.wikipedia.org/wiki/X_macro
 #define CONFIG_LIST_OF_ENTRIES \
 	X(WindowState, window_state, WindowState::Windowed, \
 	  "Default window state when the window is opened, one of Windowed, Borderless, or Fullscreen") \
