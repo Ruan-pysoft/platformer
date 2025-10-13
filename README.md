@@ -36,6 +36,8 @@ Note that `architecture.md` was written by hand, with inputs wrt structuring/ord
 
 ## How to Compile and Run
 
+**IMPORTANT**: Either clone the repository with `--recurse-submodules` to clone the submodules as well, or run `git submodule init` and then `git submodule update` after downloading the repo.
+
 ### Windows with Code::Blocks
 
 First, open the project ([`cmpg121_raylib_project.cbp`](./cmpg121_raylib_project.cbp)) in Code::Blocks.
