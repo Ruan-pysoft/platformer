@@ -91,6 +91,8 @@ const char *initial_config =
 	"#define CONFIG_H_"nl
 	nl
 	"// #define RELEASE // Enable release build"nl
+	"// #define ENABLE_PROFILER // Enable C++'s built-in profiler (for development)"nl
+	"// #define ENABLE_MEMORY_SANITIZER // Enable C++'s built-in memory sanitizer (for development)"nl
 	"// #define WINDOWS // Cross-compile for windows"nl
 	"#define WAYLAND // Enable wayland build"nl
 	"// NOTE: for some reason, fullscreen doesn't work when running the X11"nl

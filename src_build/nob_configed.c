@@ -198,8 +198,16 @@ const char *cpp_flags[] = {
 #ifdef RELEASE
 	"-O2",
 #else
+	"-Og",
 	"-g",
 	"-DDEBUG",
+#endif
+#ifdef ENABLE_MEMORY_SANITIZER
+	"-fsanitize=address",
+#endif
+#ifdef ENABLE_PROFILER
+	"-g",
+	"-p",
 #endif
 	"-Wall", "-Wextra",
 	"-I./include", "-I./raylib/src",
@@ -207,6 +215,13 @@ const char *cpp_flags[] = {
 // flags used for compiling all the .o files into the final executable
 const char *ld_flags[] = {
 	"-O2",
+#ifdef ENABLE_MEMORY_SANITIZER
+	"-fsanitize=address",
+#endif
+#ifdef ENABLE_PROFILER
+	"-g",
+	"-p",
+#endif
 #ifdef WINDOWS
 	"-L./raylib-5.5_win64_mingw-w64/lib",
 	// idk why, but we need to link extra stuff for it to work on Windows
@@ -284,14 +299,14 @@ bool build_game(void) {
 
 		if (!cmd_run(&cmd)) return false;
 
-#if defined(RELEASE) && !defined(WINDOWS)
+#if defined(RELEASE) && !defined(WINDOWS) && !defined(ENABLE_PROFILER) && !defined(ENABLE_MEMORY_SANITIZER)
 		// and strip the exe on release builds, results in a smaller
 		// exe (and theoretically harder to reverse-engineer, but I
 		// don't really care about that, I plan on having this
 		// open-source anyways)
 		cmd_append(&cmd, "strip", outfile);
 		if (!cmd_run(&cmd)) return false;
-#elif defined(RELEASE) && defined(WINDOWS)
+#elif defined(RELEASE) && defined(WINDOWS) && !defined(ENABLE_PROFILER) && !defined(ENABLE_MEMORY_SANITIZER)
 		// only strip debug symbols on Windows to hopefully not trigger
 		// Windows Defender?
 		cmd_append(&cmd, "x86_64-w64-mingw32-strip", "--strip-debug", outfile);
