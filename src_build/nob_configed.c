@@ -203,6 +203,7 @@ const char *cpp_flags[] = {
 	"-DDEBUG",
 #endif
 #ifdef ENABLE_MEMORY_SANITIZER
+	"-g",
 	"-fsanitize=address",
 #endif
 #ifdef ENABLE_PROFILER
@@ -216,6 +217,7 @@ const char *cpp_flags[] = {
 const char *ld_flags[] = {
 	"-O2",
 #ifdef ENABLE_MEMORY_SANITIZER
+	"-g",
 	"-fsanitize=address",
 #endif
 #ifdef ENABLE_PROFILER
