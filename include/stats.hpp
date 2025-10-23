@@ -38,9 +38,9 @@ struct Stats {
 	}
 
 	bool better_than(const Stats &other) const {
-		if (time < other.time) return true;
-		else if (total_respawns() < other.total_respawns()) return true;
-		else if (total_jumps() < other.total_jumps()) return true;
+		if (time != other.time) return time < other.time;
+		if (total_respawns() != other.total_respawns()) return total_respawns() < other.total_respawns();
+		if (total_jumps() != other.total_jumps()) return total_jumps() < other.total_jumps();
 		return false;
 	}
 };
