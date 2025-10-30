@@ -93,6 +93,7 @@ const char outfile[] = BUILD_DIR"game";
 
 // list headers used in the project
 #define HPP(header) const char *const header ## _hpp = INCLUDE_DIR #header ".hpp"
+#define H(header) const char *const header ## _h = INCLUDE_DIR #header ".h"
 HPP(actions);
 HPP(config);
 HPP(game);
@@ -106,18 +107,19 @@ HPP(levels_list);
 HPP(main_menu);
 HPP(player);
 HPP(scene);
-HPP(util);
+H(util);
 HPP(overlay);
 HPP(singlerun);
 HPP(stats);
 
 // list the headers each .cpp file depends on
 #define HEADERS(of, ...) const char *const of ## _headers[] = { of ## _hpp, __VA_ARGS__ }
+#define C_HEADERS(of, ...) const char *const of ## _headers[] = { of ## _h, __VA_ARGS__ }
 #define HEADERS_NO_SELF(of, ...) const char *const of ## _headers[] = { __VA_ARGS__ }
 
 HEADERS_NO_SELF(main, actions_hpp, input_manager_hpp, game_hpp, globals_hpp);
 HEADERS(game, globals_hpp, main_menu_hpp, scene_hpp);
-HEADERS(player, actions_hpp, level_hpp, stats_hpp, util_hpp);
+HEADERS(player, actions_hpp, level_hpp, stats_hpp, util_h);
 HEADERS(input_manager);
 HEADERS(actions, input_manager_hpp);
 HEADERS(level,
@@ -134,7 +136,7 @@ HEADERS(level_select,
 	singlerun_hpp
 );
 HEADERS(config);
-HEADERS(util);
+C_HEADERS(util);
 HEADERS(level_scene, level_hpp, levels_list_hpp, main_menu_hpp, scene_hpp);
 HEADERS(overlay, globals_hpp, gui_hpp);
 HEADERS(singlerun,
@@ -147,6 +149,9 @@ HEADERS(stats, globals_hpp);
 // and depends on the headers defined in name_headers
 #define STANDARD_FILE(name) \
 	{ SRC_DIR #name ".cpp", BUILD_DIR #name ".o", \
+	  name ## _headers, ARRAY_LEN(name ## _headers) }
+#define C_STANDARD_FILE(name) \
+	{ SRC_DIR #name ".c", BUILD_DIR #name ".o", \
 	  name ## _headers, ARRAY_LEN(name ## _headers) }
 
 // list the files in the project
@@ -167,7 +172,7 @@ struct Target {
 	STANDARD_FILE(gui),
 	STANDARD_FILE(level_select),
 	STANDARD_FILE(config),
-	STANDARD_FILE(util),
+	C_STANDARD_FILE(util),
 	STANDARD_FILE(level_scene),
 	STANDARD_FILE(overlay),
 	STANDARD_FILE(singlerun),
@@ -188,9 +193,11 @@ bool target_needs_rebuild(const struct Target *target) {
 
 // select a cross-compiler if required in config.h
 #ifdef WINDOWS
-const char *compiler = "x86_64-w64-mingw32-g++";
+const char *compiler = "x86_64-w64-mingw32-gcc";
+const char *linker = "x86_64-w64-mingw32-g++";
 #else
-const char *compiler = "g++";
+const char *compiler = "gcc";
+const char *linker = "g++";
 #endif
 
 // flags used for compiling a certain c++ source to a .o file
@@ -290,7 +297,7 @@ bool build_game(void) {
 	// if neither config.h has changed, nor any .o files were rebuilt, then
 	// we don't need to rebuild the executable
 	if (exe_needs_rebuild) {
-		cmd_append(&cmd, compiler);
+		cmd_append(&cmd, linker);
 		cmd_append(&cmd, "-o", outfile);
 		for (size_t i = 0; i < ARRAY_LEN(targets); ++i) {
 			cmd_append(&cmd, targets[i].obj);

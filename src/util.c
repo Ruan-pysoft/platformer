@@ -1,45 +1,49 @@
-#include "util.hpp"
+#include "util.h"
 
-namespace util {
+#include "raylib.h"
+#include "raymath.h"
 
-Collision collide(Rectangle from, Rectangle to) {
-	Collision res = {};
-
-	res.new_pos = { from.x, from.y };
-
-	const Vector2 from_centre = {
-		from.x + from.width/2,
-		from.y + from.height/2,
+static inline Vector2 Rectangle_pos(Rectangle this) {
+	return (Vector2) { this.x, this.y };
+}
+static inline Vector2 Rectangle_span(Rectangle this) {
+	return (Vector2) { this.width, this.height };
+}
+static inline Vector2 Rectangle_centre(Rectangle this) {
+	return (Vector2) {
+		this.x + this.width/2,
+		this.y + this.height/2,
 	};
-	const Vector2 to_centre = {
-		to.x + to.width/2,
-		to.y + to.height/2,
-	};
+}
 
+struct Collision collide(Rectangle from, Rectangle to) {
+	struct Collision res = {0};
+
+	res.new_pos = Rectangle_pos(from);
+
+	const Vector2 from_centre = Rectangle_centre(from);
+	const Vector2 to_centre = Rectangle_centre(to);
+
+	// can only collide in the x-direction if it overlaps in the y-direction
 	const bool might_collide_horisontal =
 		(from.y <= to.y && from.y + from.height >= to.y)
 		|| (from.y <= to.y + to.height && from.y + from.height >= to.y + to.height)
-		|| (from.y <= to.y + to.height && from.y + from.height <= to.y);
+		|| (from.y <= to.y + to.height && from.y + from.height <= to.y)
 	;
+	// can only collide in the y-direction if it overlaps in the x-direction
 	const bool might_collide_vertical =
 		(from.x <= to.x && from.x + from.width >= to.x)
 		|| (from.x <= to.x + to.width && from.x + from.width >= to.x + to.width)
-		|| (from.x <= to.x + to.width && from.x + from.width <= to.x);
+		|| (from.x <= to.x + to.width && from.x + from.width <= to.x)
 	;
 
 	if (might_collide_horisontal) {
 		if (from_centre.x < to_centre.x) {
 			const float from_near_edge = from.x + from.width;
-			/* const float from_far_edge = from.x; */
 			const float to_near_edge = to.x;
-			/* const float to_far_edge = to.x + to.width; */
 
-			// smallest (signed) x-distance from `from` to `to`
 			const float near_dist = to_near_edge - from_near_edge;
-			// greatest (signed) x-distance from `from` to `to`
-			/* const float far_dist = to_far_edge - from_far_edge; */
 
-			// right edge of `from` is touching or past left edge of `to`
 			if (near_dist <= 0) {
 				res.x_touches = true;
 				res.dist.x = near_dist;
@@ -50,10 +54,8 @@ Collision collide(Rectangle from, Rectangle to) {
 			const float from_near_edge = from.x;
 			const float to_near_edge = to.x + to.width;
 
-			// smallest (signed) x-distance from `from` to `to`
 			const float near_dist = to_near_edge - from_near_edge;
 
-			// left edge of `from` is touching or past right edge of `to`
 			if (near_dist >= 0) {
 				res.x_touches = true;
 				res.dist.x = near_dist;
@@ -63,7 +65,6 @@ Collision collide(Rectangle from, Rectangle to) {
 		}
 	}
 
-	// y is implemented as a copy of x
 	if (might_collide_vertical) {
 		if (from_centre.y < to_centre.y) {
 			const float from_near_edge = from.y + from.height;
@@ -93,6 +94,4 @@ Collision collide(Rectangle from, Rectangle to) {
 	}
 
 	return res;
-}
-
 }

@@ -4,7 +4,7 @@
 
 #include "level.hpp"
 #include "raylib.h"
-#include "util.hpp"
+#include "util.h"
 
 inline constexpr MotionInputs operator|(MotionInputs a, MotionInputs b) {
 	return static_cast<MotionInputs>(
@@ -98,7 +98,7 @@ void Player::resolve_collisions_x(Level &level) {
 			if (tile.type == TileType::Empty) continue;
 			if (collider.width == 0 && collider.height == 0) continue;
 
-			const auto collision = util::collide(player_collider, collider);
+			const auto collision = collide(player_collider, collider);
 
 			// if there is no x collision, or if the player only
 			// slightly overlaps with the block in the y axis,
@@ -151,7 +151,7 @@ void Player::resolve_collisions_y(Level &level) {
 			if (tile.type == TileType::Empty) continue;
 			if (collider.width == 0 && collider.height == 0) continue;
 
-			const auto collision = util::collide(player_collider, collider);
+			const auto collision = collide(player_collider, collider);
 
 			// if there is no y collision, or if the player only
 			// slightly overlaps with the block in the x axis,
