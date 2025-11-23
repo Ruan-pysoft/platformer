@@ -70,7 +70,7 @@ If you download the executable directly rather than the zip file, you'll have to
 
 First note that this *is* a university project, so I'll just note here that while copying this project and claiming it as your own might not be *illegal*, it would still be plagiarism and subject to university disciplinary procedures. So don't try passing it off as your own project, because it's not. That being said, here be my ramblings on copying my code:
 
-This library is set free under the [Unlicense](https://unlicense.org/).
+This program is set free under the [Unlicense](https://unlicense.org/).
 This means that it is released into the public domain
 for all to use as they see fit.
 Use it in a way I'll approve of,
